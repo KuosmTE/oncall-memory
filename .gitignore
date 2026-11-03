@@ -1,3 +1,6 @@
+# local Forge CLI install only (dev tooling, not the app)
+/package.json
+/package-lock.json
 node_modules/
 .forge/
 .env

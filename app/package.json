@@ -6,9 +6,10 @@
   "description": "Codegeist 2026 — evidence-backed on-call memory for Jira",
   "scripts": {
     "test": "node --test test/",
-    "deploy": "forge deploy",
-    "install": "forge install --demo-site",
-    "tunnel": "forge tunnel"
+    "check": "./validate-manifest.py",
+    "forge:deploy": "forge deploy",
+    "forge:install": "forge install --demo-site",
+    "forge:tunnel": "forge tunnel"
   },
   "dependencies": {},
   "devDependencies": {}
