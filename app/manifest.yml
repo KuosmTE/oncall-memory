@@ -8,7 +8,17 @@ app:
     memoryMB: 256
 
 modules:
+  jira:issuePanel:
+    - key: oncall-memory-panel
+      title: On-Call Memory
+      icon: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='6' fill='none' stroke='%230052CC' stroke-width='2'/%3E%3Ccircle cx='8' cy='8' r='2' fill='%230052CC'/%3E%3C/svg%3E"
+      resource: oncall-panel
+      resolver:
+        function: panel-resolver-fn
+
   function:
+    - key: panel-resolver-fn
+      handler: resolvers.panelData
     - key: who-knows-fn
       handler: handlers.whoKnows
     - key: memory-card-fn
@@ -67,6 +77,10 @@ modules:
         - avi:jira:created:issue
       filter:
         ignoreSelf: true
+
+resources:
+  - key: oncall-panel
+    path: src/frontend/panel
 
 permissions:
   scopes:

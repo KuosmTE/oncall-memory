@@ -7,11 +7,16 @@
   "scripts": {
     "test": "node --test test/",
     "check": "./validate-manifest.py",
-    "forge:deploy": "forge deploy",
+    "build:panel": "esbuild src/frontend/panel/src/main.js --bundle --format=iife --target=es2020 --outfile=src/frontend/panel/app.js",
+    "forge:deploy": "npm run build:panel && forge deploy",
     "forge:install": "forge install --demo-site",
     "forge:tunnel": "forge tunnel"
   },
   "dependencies": {
-    "@forge/api": "^8.4.0"
+    "@forge/api": "^8.4.0",
+    "@forge/bridge": "^7.2.1"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2"
   }
 }

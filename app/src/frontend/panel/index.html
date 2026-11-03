@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>On-Call Memory</title>
+    <style>
+      /* Atlassian-ish tokens; the panel sits inside Jira, so it must not fight the chrome. */
+      :root {
+        --n900: #172b4d;
+        --n200: #dfe1e6;
+        --n100: #f4f5f7;
+        --muted: #6b778c;
+        --accent: #0052cc;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        padding: 12px;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        font-size: 13px;
+        line-height: 1.45;
+        color: var(--n900);
+        background: #fff;
+      }
+      h2 {
+        margin: 0 0 6px;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+      section { margin-bottom: 14px; }
+      .row { padding: 5px 0; border-bottom: 1px solid var(--n100); }
+      .row:last-child { border-bottom: 0; }
+      .name { font-weight: 600; }
+      .why { display: block; color: var(--muted); font-size: 12px; }
+      .key { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; color: var(--accent); text-decoration: none; }
+      .key:hover { text-decoration: underline; }
+      .note { color: var(--muted); font-size: 12px; }
+      .msg { padding: 10px; background: var(--n100); border-left: 3px solid var(--n200); border-radius: 3px; }
+      .err { border-left-color: #de350b; }
+    </style>
+  </head>
+  <body>
+    <div id="app"><p class="note">Loading…</p></div>
+    <script src="app.js"></script>
+  </body>
+</html>
