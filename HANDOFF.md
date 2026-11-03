@@ -59,8 +59,14 @@ app/validate-manifest.py          pre-deploy checker (handlers resolve under src
 ## Next up
 
 **P3 — make the panel mean something**
-- Seed 5 resolved incident tickets on the demo site, same failure, different years, so the panel has history (use JQL via the site UI or a one-off `curl` script with an API token — Forge token cannot call Jira REST).
-- Acceptance: open a 6th similar issue → panel shows ≥2 "happened before" and ≥1 person with receipts.
+- Add to `.env` a **Jira-scoped** token (the Forge token cannot call Jira REST):
+  `JIRA_BASE=https://one-atlas-boys.atlassian.net`, `JIRA_EMAIL=…`, `JIRA_API_TOKEN=…`
+- Run `tools/seed-incidents.py --project <KEY> --dry-run` first, then without `--dry-run`.
+  It creates 5 same-failure incidents (varied wording) + 1 unrelated control, assigns them
+  across assignable users, and transitions them to Done. Verified to fail loudly when
+  credentials are missing; not yet run against the live site.
+- Acceptance: open a 6th similar issue → panel shows ≥2 "happened before" and ≥1 person with
+  receipts, and the control issue matches nothing.
 - Record `raw-P3-panel.mp4` (see DEMO.md).
 
 **P4 — Teamwork Graph + LLM judge** (then re-decide the org-admin trade-off)
