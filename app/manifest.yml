@@ -1,0 +1,74 @@
+# On-Call Memory — Forge manifest (v0, backend only).
+# The panel lands in P2 with the `forge create` UI Kit toolchain, so its resource path
+# is not invented here. Validate before every deploy:  ./validate-manifest.py
+app:
+  id: ari:cloud:ecosystem::app/REPLACE-ME-AFTER-forge-register
+  runtime:
+    name: nodejs24.x
+    memoryMB: 256
+
+modules:
+  function:
+    - key: who-knows-fn
+      handler: src/handlers.whoKnows
+    - key: memory-card-fn
+      handler: src/handlers.memoryCard
+    - key: radar-fn
+      handler: src/handlers.onIssueCreated
+
+  action:
+    - key: who-knows
+      name: Who knows about this
+      function: who-knows-fn
+      actionVerb: GET
+      description: >
+        Return up to three people with real evidence of having solved this kind of
+        problem, each with the issue keys, pages and dates that prove it. Use when a
+        user asks who to talk to about an issue, an incident or a component.
+      inputs:
+        issueKey:
+          title: Issue key
+          type: string
+          required: true
+          description: Jira issue key, e.g. OPS-123
+
+    - key: has-happened-before
+      name: Has this happened before
+      function: memory-card-fn
+      actionVerb: GET
+      description: >
+        Return up to five past issues that describe the same problem as the given text
+        or issue, with how each was resolved and by whom. Use before starting work on
+        an incident or a bug report.
+      inputs:
+        text:
+          title: Problem description
+          type: string
+          required: false
+          description: Free-text description of the problem
+        issueKey:
+          title: Issue key
+          type: string
+          required: false
+          description: Existing Jira issue to use as the query instead of text
+
+  rovo:mcp:
+    - key: oncall-memory-mcp
+      name: On-Call Memory
+      tools:
+        - who-knows
+        - has-happened-before
+
+  trigger:
+    - key: issue-created-radar
+      function: radar-fn
+      events:
+        - avi:jira:created:issue
+      filter:
+        ignoreSelf: true
+
+permissions:
+  scopes:
+    - read:jira-work
+    - read:jira-user
+    - read:graph:jira
