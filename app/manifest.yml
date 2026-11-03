@@ -2,7 +2,7 @@
 # The panel lands in P2 with the `forge create` UI Kit toolchain, so its resource path
 # is not invented here. Validate before every deploy:  ./validate-manifest.py
 app:
-  id: ari:cloud:ecosystem::app/REPLACE-ME-AFTER-forge-register
+  id: ari:cloud:ecosystem::app/d0c1b623-3512-4219-8760-0b15e2bd80b2
   runtime:
     name: nodejs24.x
     memoryMB: 256
@@ -10,11 +10,11 @@ app:
 modules:
   function:
     - key: who-knows-fn
-      handler: src/handlers.whoKnows
+      handler: handlers.whoKnows
     - key: memory-card-fn
-      handler: src/handlers.memoryCard
+      handler: handlers.memoryCard
     - key: radar-fn
-      handler: src/handlers.onIssueCreated
+      handler: handlers.onIssueCreated
 
   action:
     - key: who-knows
@@ -22,9 +22,10 @@ modules:
       function: who-knows-fn
       actionVerb: GET
       description: >
-        Return up to three people with real evidence of having solved this kind of
-        problem, each with the issue keys, pages and dates that prove it. Use when a
-        user asks who to talk to about an issue, an incident or a component.
+        Return up to three people with real evidence of having solved this kind
+        of problem, each with the issue keys, pages and dates that prove it. Use
+        when a user asks who to talk to about an issue, an incident or a
+        component.
       inputs:
         issueKey:
           title: Issue key
@@ -37,9 +38,9 @@ modules:
       function: memory-card-fn
       actionVerb: GET
       description: >
-        Return up to five past issues that describe the same problem as the given text
-        or issue, with how each was resolved and by whom. Use before starting work on
-        an incident or a bug report.
+        Return up to five past issues that describe the same problem as the
+        given text or issue, with how each was resolved and by whom. Use before
+        starting work on an incident or a bug report.
       inputs:
         text:
           title: Problem description
@@ -71,4 +72,7 @@ permissions:
   scopes:
     - read:jira-work
     - read:jira-user
-    - read:graph:jira
+    # write: exactly one comment on a newly created issue (the radar). Nothing else writes.
+    - write:jira-work
+    # read:graph:jira is deliberately NOT declared yet: the Teamwork Graph query lands in P4,
+    # and declaring an unused TWG scope would force judges through an org-admin install.

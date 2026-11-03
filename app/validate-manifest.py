@@ -49,17 +49,19 @@ def main():
         if fn_key and fn_key not in functions:
             fail(problems, f"{origin} points at unknown function {fn_key!r}")
 
-    # handlers: file exists, export exists
+    # handlers: the Forge CLI resolves handler paths under `app.src/`, so
+    # `handlers.whoKnows` means `src/handlers.js` exporting `whoKnows`
+    # (@forge/manifest get-handlers-directory.js → SOURCE_DIRECTORY = 'src').
     for key, handler in functions.items():
         if "." not in handler:
             fail(problems, f"function {key}: handler {handler!r} is not file.export")
             continue
         rel, export = handler.rsplit(".", 1)
-        path = ROOT / f"{rel}.js"
+        path = ROOT / "src" / f"{rel}.js"
         if not path.exists():
-            fail(problems, f"function {key}: missing file {path.relative_to(ROOT)}")
+            fail(problems, f"function {key}: missing file src/{rel}.js")
         elif not re.search(rf"export\s+(async\s+)?(function\s+{export}\b|const\s+{export}\s*=)", path.read_text()):
-            fail(problems, f"function {key}: {rel}.js does not export {export!r}")
+            fail(problems, f"function {key}: src/{rel}.js does not export {export!r}")
 
     # MCP tools resolve to declared actions
     for mcp in modules.get("rovo:mcp", []):

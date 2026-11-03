@@ -33,8 +33,10 @@ don't say it. This is the difference between a demo and a product.
 
 ## 3. Non-goals
 
-- No writing, transitioning, assigning or bulk operations. Read-only app. (#3 "Safe
-  Hands" is a separate product, deliberately not merged here.)
+- No writing, transitioning, assigning or bulk operations. The single exception is
+  **one comment posted on a newly created issue** (the radar). That comment is the whole
+  write surface; everything else is read-only. (#3 "Safe Hands" is a separate product,
+  deliberately not merged here.)
 - No embeddings, no vector store. JQL text search + LLM judgement only.
 - No cross-site, no external connectors, no configuration screens. Zero-setup install.
 - No free-text chat UI of our own: Rovo is the chat, we supply the tools.

@@ -11,6 +11,7 @@
     "forge:install": "forge install --demo-site",
     "forge:tunnel": "forge tunnel"
   },
-  "dependencies": {},
-  "devDependencies": {}
+  "dependencies": {
+    "@forge/api": "^8.4.0"
+  }
 }
