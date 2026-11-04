@@ -6,6 +6,7 @@ const app = document.getElementById("app");
 function h(tag, props = {}, ...children) {
   const node = document.createElement(tag);
   for (const [k, v] of Object.entries(props)) {
+    if (v === null || v === undefined) continue;
     if (k === "class") node.className = v;
     else if (k === "href") node.href = v;
     else node.setAttribute(k, v);
@@ -14,8 +15,36 @@ function h(tag, props = {}, ...children) {
   return node;
 }
 
+const issueLink = (key) =>
+  h("a", { class: "key", href: `/browse/${key}`, target: "_blank", rel: "noopener" }, key);
+
 function section(title, rows) {
   return h("section", {}, h("h2", {}, title), ...rows);
+}
+
+function peopleRow(p) {
+  // Receipts are links: the demo beat is "click the person, land on the issue that proves it".
+  const links = (p.receipts || []).map((k) => issueLink(k));
+  const line = h("span", { class: "why" });
+  links.forEach((a, i) => {
+    line.append(a);
+    if (i < links.length - 1) line.append(document.createTextNode(" · "));
+  });
+  if (p.lastResolved) line.append(document.createTextNode(` · last resolved ${p.lastResolved}`));
+
+  return h("div", { class: "row" }, h("span", { class: "name" }, p.person), line);
+}
+
+function fixRow(f) {
+  return h(
+    "div",
+    { class: "row" },
+    issueLink(f.key),
+    h("span", { class: "what" }, f.summary),
+    f.fix
+      ? h("span", { class: "why" }, `fix: ${f.fix}`)
+      : h("span", { class: "why" }, `${f.assignee || "no assignee recorded"}${f.resolvedAt ? ` · resolved ${f.resolvedAt}` : ""}`)
+  );
 }
 
 function render(data) {
@@ -26,35 +55,23 @@ function render(data) {
     return;
   }
 
+  // The claim, first: a judge should learn the rule before reading any row.
+  app.append(
+    h("div", { class: `verdict ${data.verdict.startsWith("No receipts") ? "empty" : ""}` },
+      h("span", { class: "vtext" }, data.verdict),
+      data.confidence ? h("span", { class: "conf" }, data.confidence) : null)
+  );
+
   if (data.people?.length) {
-    app.append(
-      section(
-        "Ask these people",
-        data.people.map((p) =>
-          h("div", { class: "row" },
-            h("span", { class: "name" }, p.person),
-            h("span", { class: "why" }, p.resolved + (p.lastActive ? ` · last active ${p.lastActive.slice(0, 10)}` : ""))
-          )
-        )
-      )
-    );
+    app.append(section("Ask these people", data.people.map(peopleRow)));
   }
 
-  if (data.fixes?.length) {
-    app.append(
-      section(
-        "Happened before",
-        data.fixes.map((f) =>
-          h("div", { class: "row" },
-            h("a", { class: "key", href: `/browse/${f.key}`, target: "_blank", rel: "noopener" }, f.key),
-            h("span", { class: "why" }, `${f.summary} — ${f.resolvedBy}`)
-          )
-        )
-      )
-    );
-  } else {
-    app.append(section("Happened before", [h("p", { class: "note" }, "Nothing similar was ever resolved here.")]));
-  }
+  app.append(
+    section(
+      "Happened before",
+      data.fixes?.length ? data.fixes.map(fixRow) : [h("p", { class: "note" }, "Nothing to cite.")]
+    )
+  );
 
   if (data.note) app.append(h("p", { class: "note" }, data.note));
 }

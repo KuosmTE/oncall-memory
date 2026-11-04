@@ -1,4 +1,5 @@
-// Pure ranking logic. No Forge, no network, no dependencies. Testable with `node --test`.
+// Pure logic: ranking, query text, confidence, the verdict line. No Forge, no network.
+// Everything here is unit-tested; src/handlers.js only does I/O.
 
 const STOP = new Set(
   "the a an and or of for to in on with is was were be been it this that from at as by not no you your we our when then there here".split(" ")
@@ -12,8 +13,18 @@ export function tokens(text) {
 }
 
 /**
+ * Text → the value that goes inside a quoted JQL `text ~ "…"`.
+ * SECURITY: the tokenizer charset ([a-z0-9._-]) is the sanitiser — it cannot emit a
+ * quote, a backslash or a JQL operator, so nothing here can close the quoted phrase.
+ * Do not widen the charset; tests/engine.test.mjs holds the hostile-title table.
+ */
+export function toJqlText(text, limit = 8) {
+  return tokens(text).slice(0, limit).join(" ");
+}
+
+/**
  * Re-rank Jira search hits against the query they were searched for.
- * JQL `text ~` is a dumb OR; this decides which hits actually look like the same problem.
+ * JQL `text ~` is a dumb OR; this decides which hits actually describe the same problem.
  * ponytail: token overlap, not embeddings. Upgrade path = Forge LLM judge on the top 5.
  */
 export function rankCandidates(query, candidates, limit = 5) {
@@ -22,7 +33,7 @@ export function rankCandidates(query, candidates, limit = 5) {
 
   return candidates
     .map((c) => {
-      const text = [c.summary, c.description, ...(c.comments || [])].join(" ");
+      const text = [c.summary, c.description, c.lastFix].filter(Boolean).join(" ");
       const t = new Set(tokens(text));
       let hits = 0;
       const matched = [];
@@ -36,21 +47,37 @@ export function rankCandidates(query, candidates, limit = 5) {
 }
 
 /**
- * Rank people by evidence, not by title. Every output row carries its receipts.
- * evidence: [{ person, resolved: [issueKey], docs: [pageId], lastActive: ISO date }]
+ * Rank people by evidence, not by title. Every row carries its receipts.
+ * evidence: [{ person, resolved: [issueKey], lastResolved: ISO date }]
+ * A name with no citations is dropped: it is a guess, not a receipt.
  */
 export function rankPeople(evidence, limit = 3) {
   return evidence
+    .filter((e) => e.person && (e.resolved || []).length > 0)
     .map((e) => ({
       person: e.person,
-      score: (e.resolved || []).length * 2 + (e.docs || []).length,
-      receipts: {
-        resolved: e.resolved || [],
-        docs: e.docs || [],
-        lastActive: e.lastActive || null,
-      },
+      score: e.resolved.length,
+      receipts: e.resolved,
+      lastResolved: e.lastResolved || null,
     }))
-    .filter((p) => p.score > 0)
     .sort((a, b) => b.score - a.score || a.person.localeCompare(b.person))
     .slice(0, limit);
+}
+
+/** Confidence from the shape of the result, not a magic score threshold. */
+export function confidence(matches) {
+  if (!matches.length) return "low";
+  if (matches.length >= 2 && matches[0].matched.length >= 3) return "high";
+  return "medium";
+}
+
+/** The one line that makes the claim readable in five seconds. */
+export function verdict(fixes, people) {
+  if (!fixes.length && !people.length) {
+    return "No receipts: nothing resolved looks like this ticket.";
+  }
+  const parts = [];
+  if (fixes.length) parts.push(`${fixes.length} past fix${fixes.length === 1 ? "" : "es"}`);
+  if (people.length) parts.push(`${people.length} ${people.length === 1 ? "person" : "people"} who did them`);
+  return parts.join(" · ");
 }

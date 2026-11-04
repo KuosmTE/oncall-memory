@@ -22,8 +22,8 @@ The graph has the answer. It has no interface.
 | You're looking at a ticket | Jira issue panel | "Who actually knows about this?" |
 | A ticket is created | Product trigger → comment | "Has this happened before, and how was it fixed?" |
 
-Both are one engine: **search similar past work → have an LLM judge whether it's the
-same problem → return receipts (issue keys, people, links).**
+Both are one engine: **search similar past work → rank by text overlap → return receipts
+(issue keys, people, links).** An LLM judge replaces the ranking in P4, not before.
 
 ### What "receipts" means (non-negotiable)
 
@@ -45,9 +45,9 @@ don't say it. This is the difference between a demo and a product.
 
 | Module | Purpose |
 |---|---|
-| `jira:issuePanel` (UI Kit) | The memory card for the issue in front of you |
+| `jira:issuePanel` (Custom UI) | The memory card for the issue in front of you |
 | `trigger` — `avi:jira:created:issue` | Radar: comment on new issues |
-| `action` ×4 | The engine's callable surface |
+| `action` ×2 (`who-knows`, `has-happened-before`) | The engine's callable surface |
 | `rovo:skill` (SKILL.md) | Tells Rovo *when* and *how* to use the actions |
 | `rovo:agent` | "On-Call Memory" teammate: prompt + actions + skill |
 | `rovo:mcp` | Same read-only tools for Claude Code / Hermes |
@@ -56,26 +56,25 @@ don't say it. This is the difference between a demo and a product.
 
 All read-only, all return `{ items: [...], confidence, note }`.
 
-1. `find-similar-resolved` — input: `text` or `issueKey`. Output: ≤5 past issues that
+1. `has-happened-before` — input: `text` or `issueKey`. Output: ≤5 past issues that
    were the same problem, each with resolution summary, resolver, date, and a one-line
    "why it matches". Excludes the input issue and anything unresolved.
 2. `who-knows` — input: `issueKey`. Output: ≤3 people ranked by evidence, each with
-   receipts (issues resolved, docs authored, last activity).
-3. `memory-card` — composite for the panel: 1 + 2 + links, one round trip.
-4. `radar-comment` — internal, invoked by the trigger; posts the comment. Not exposed
-   as a tool (no writes for agents).
+   receipts (issue keys they resolved, last resolution date).
+Both are served by one internal call (`buildCard`) so the panel, the actions and the
+   trigger cannot disagree. The radar comment is a plain function, not an action: agents
+   get no write surface.
 
-**MCP exposure:** tools 1–3 only.
+**MCP exposure:** both actions, read-only.
 
 ## 6. Data sources
 
 - **Jira search** (JQL `text ~ "..."`, project-scoped): candidate set, ≤50.
 - **Teamwork Graph** (GraphQL + Cypher, read scopes): people ↔ work relationships for
   "who knows". Requires org-admin install — accepted, we are org admin on our own site.
-- **Forge LLMs** (`claude-haiku-4-5`): the "same problem?" judge and the one-line why.
-  Haiku tier keeps a demo under a cent.
-- **Forge storage:** short-lived cache of the last card per issue (30 min), so a panel
-  refresh doesn't re-run the LLM.
+- **Forge LLMs** (`claude-haiku-4-5`): *not implemented yet* — matching is token overlap.
+  The LLM judge is the P4 upgrade, and it has no free tier (billed to the app developer).
+- **Forge storage:** not used yet; the 30-minute card cache arrives with the LLM judge (P4).
 
 ## 7. Fallback if TWG misbehaves (de-risk, decide in P2 spike)
 
@@ -103,7 +102,7 @@ behind the riskiest API.**
 3. `1:10` Create a near-duplicate ticket → radar comment appears with the previous fix.
 4. `1:50` Ask the Rovo agent the same question in chat → it uses our tool, cites keys.
 5. `2:30` In Claude Code: `who knows about this?` → MCP call, same answer, outside Atlassian.
-6. `2:50` One line: read-only, zero config, install link.
+6. `2:50` One line: read-only except one comment, zero config, install link.
 
 ## 10. Risks
 

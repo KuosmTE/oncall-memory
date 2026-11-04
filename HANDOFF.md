@@ -20,11 +20,11 @@ Read this first in a fresh session. Then `SPEC.md` (product) and `DEMO.md` (film
 ```bash
 cd /opt/workspace/codegeist && set -a && . ./.env && set +a   # auth, no keychain, no forge login
 cd app
-npm test                      # 7/7 engine tests, no network
-./validate-manifest.py        # manifest ↔ handlers ↔ actions consistency
+npm test                      # 13 engine tests, no network
+npm run check                 # test + forge lint (the validator script was deleted: no PyYAML on this box)
 npm run build:panel           # esbuild the Custom UI bundle → src/frontend/panel/app.js
 npx forge lint                # must say "No issues found"
-npx forge deploy -e development --non-interactive
+npm run forge:deploy        # builds the panel bundle first — never call forge deploy bare
 npx forge install --demo-site --product Jira -e development --non-interactive --confirm-scopes --upgrade
 ```
 
@@ -39,6 +39,23 @@ app/src/frontend/panel/           Custom UI: index.html + src/main.js → app.js
 app/test/engine.test.mjs          node:test, no deps
 app/validate-manifest.py          pre-deploy checker (handlers resolve under src/)
 ```
+
+## Review round 1 (architect, t_6db62490) — fixed in v3.0.0
+
+- Radar identity: every read now takes a mode; the trigger uses `api.asApp()` because
+  `asUser()` is unavailable in product-event context. Errors are logged, not swallowed.
+- Person receipts are links (`/browse/<key>`) — the demo beat is filmable now.
+- The fix comment is fetched (`fields=comment`) and rendered in the panel and the radar
+  comment, so "how it was fixed" exists for the first time.
+- One engine call (`buildCard`) serves panel, actions and trigger — they cannot disagree.
+- `"unassigned"` is no longer a person; issue keys are validated before reaching JQL;
+  confidence is derived from result shape, not a 0.35 threshold that was unreachable.
+- Removed unused `read:jira-user`; deleted `validate-manifest.py` (no PyYAML on this box —
+  `npm run check` is now `npm test && forge lint`).
+- Tests 7 → 13, including the hostile-JQL-title table.
+
+**Still unproven at runtime:** the radar has never fired (no issue created since install).
+Create one throwaway issue on the demo site, then `forge logs -f radar-fn -s 5m`.
 
 ## Decisions taken (do not silently reverse)
 

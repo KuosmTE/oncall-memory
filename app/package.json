@@ -3,10 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Codegeist 2026 — evidence-backed on-call memory for Jira",
+  "description": "Codegeist 2026 \u2014 evidence-backed on-call memory for Jira",
   "scripts": {
     "test": "node --test test/",
-    "check": "./validate-manifest.py",
+    "check": "npm test && forge lint",
     "build:panel": "esbuild src/frontend/panel/src/main.js --bundle --format=iife --target=es2020 --outfile=src/frontend/panel/app.js",
     "forge:deploy": "npm run build:panel && forge deploy",
     "forge:install": "forge install --demo-site",
