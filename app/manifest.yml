@@ -70,6 +70,13 @@ modules:
         - who-knows
         - has-happened-before
 
+  # P4: the judge. Adding this module is a MAJOR version bump — admins must approve the
+  # upgrade, and every token is billed to this Developer Space (no free allowance).
+  llm:
+    - key: oncall-judge
+      model:
+        - claude
+
   trigger:
     - key: issue-created-radar
       function: radar-fn

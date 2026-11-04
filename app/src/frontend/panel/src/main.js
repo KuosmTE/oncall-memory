@@ -36,14 +36,16 @@ function peopleRow(p) {
 }
 
 function fixRow(f) {
+  const detail = [
+    f.why || null,
+    f.fix ? `fix: ${f.fix}` : null,
+  ].filter(Boolean).join(" · ");
   return h(
     "div",
     { class: "row" },
     issueLink(f.key),
     h("span", { class: "what" }, f.summary),
-    f.fix
-      ? h("span", { class: "why" }, `fix: ${f.fix}`)
-      : h("span", { class: "why" }, `${f.assignee || "no assignee recorded"}${f.resolvedAt ? ` · resolved ${f.resolvedAt}` : ""}`)
+    h("span", { class: "why" }, detail || `${f.assignee || "no assignee recorded"}${f.resolvedAt ? ` · resolved ${f.resolvedAt}` : ""}`)
   );
 }
 

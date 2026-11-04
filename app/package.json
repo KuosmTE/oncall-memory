@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Codegeist 2026 \u2014 evidence-backed on-call memory for Jira",
+  "description": "Codegeist 2026 — evidence-backed on-call memory for Jira",
   "scripts": {
     "test": "node --test test/",
     "check": "npm test && forge lint",
@@ -14,7 +14,8 @@
   },
   "dependencies": {
     "@forge/api": "^8.4.0",
-    "@forge/bridge": "^7.2.1"
+    "@forge/bridge": "^7.2.1",
+    "@forge/llm": "^1.0.9"
   },
   "devDependencies": {
     "esbuild": "^0.28.2"

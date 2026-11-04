@@ -5,7 +5,44 @@
 // takes a mode and the trigger passes "app". Getting this wrong fails silently.
 
 import api, { route } from "@forge/api";
-import { confidence, jqlTextClause, rankCandidates, rankPeople, toJqlText } from "./engine.js";
+import { chat } from "@forge/llm";
+import {
+  applyJudgement,
+  confidence,
+  contentText,
+  jqlTextClause,
+  judgeMessages,
+  parseJudgement,
+  rankCandidates,
+  rankPeople,
+  toJqlText,
+} from "./engine.js";
+
+// Haiku: cheapest active Forge LLM tier — this is a yes/no with a one-line reason, not reasoning.
+const JUDGE_MODEL = "claude-haiku-4-5-20251001";
+
+/**
+ * Ask the model which candidates are really the same problem.
+ * ponytail: no 30-min cache yet — a demo issue costs ~1c and a cache is a failure mode of its own.
+ * Add Forge storage TTL caching when the panel is opened at real volume.
+ * On ANY failure the token ranking stands: a judge that breaks must not break the product.
+ */
+async function judge(query, items) {
+  if (!items.length) return items;
+  try {
+    const res = await chat({ model: JUDGE_MODEL, messages: judgeMessages(query, items) });
+    const text = contentText(res?.choices?.[0]?.message?.content);
+    const verdicts = parseJudgement(text);
+    if (!verdicts) {
+      console.error(`judge unparsable: ${text.slice(0, 200)}`);
+      return items;
+    }
+    return applyJudgement(items, verdicts);
+  } catch (e) {
+    console.error(`judge failed, token ranking stands: ${e.message}`);
+    return items;
+  }
+}
 
 const FIELDS = ["summary", "description", "resolution", "resolutiondate", "assignee", "comment", "status"];
 const KEY_RE = /^[A-Z][A-Z0-9_]*-[0-9]+$/;
@@ -95,7 +132,8 @@ export async function buildCard({ issueKey, text } = {}, mode = "user") {
   const jql = `${scope}(${jqlTextClause(words)}) AND statusCategory = Done${notSelf} ORDER BY resolved DESC`;
 
   const issues = await search(jql, mode);
-  const items = rankCandidates(words, issues.map(toCandidate), 5);
+  // Judge BEFORE people: a person is only cited for an issue the judge confirmed is the same problem.
+  const items = await judge(query, rankCandidates(words, issues.map(toCandidate), 5));
 
   const byPerson = new Map();
   for (const m of items) {
@@ -136,7 +174,7 @@ function commentBody(card) {
       type: "paragraph",
       content: [{
         type: "text",
-        text: `${i.key} — ${i.summary}${i.resolvedBy ? ` — fixed by ${i.resolvedBy}` : ""}${i.lastFix ? `: ${i.lastFix}` : ""}`,
+        text: `${i.key} — ${i.summary}${i.why ? ` — ${i.why}` : ""}${i.resolvedBy ? ` — fixed by ${i.resolvedBy}` : ""}${i.lastFix ? `: ${i.lastFix}` : ""}`,
       }],
     }],
   }));

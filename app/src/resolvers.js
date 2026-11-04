@@ -25,6 +25,7 @@ export async function panelData(payload) {
         assignee: i.resolvedBy, // "assignee at resolution" — what we can actually cite
         resolvedAt: i.resolvedAt ? i.resolvedAt.slice(0, 10) : null,
         fix: i.lastFix,
+        why: i.why || null,
         matched: (i.matched || []).slice(0, 5).join(", "),
       })),
       people: card.people.map((p) => ({

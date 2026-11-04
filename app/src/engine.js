@@ -94,3 +94,70 @@ export function verdict(fixes, people) {
   if (people.length) parts.push(`${people.length} ${people.length === 1 ? "person" : "people"} who did them`);
   return parts.join(" · ");
 }
+
+// --- judge (P4) ------------------------------------------------------------------
+// The model call lives in handlers.js; the prompt and the parsing live here so they are
+// testable without network. A judge that cannot be parsed must fall back, never invent.
+
+/** Messages for "is this the same problem?" over the top candidates. */
+export function judgeMessages(query, items) {
+  const candidates = items.map((c, i) => ({
+    n: i + 1,
+    key: c.key,
+    summary: c.summary,
+    text: (c.description || "").slice(0, 400),
+  }));
+  return [
+    {
+      role: "system",
+      content:
+        "You judge whether Jira issues describe the SAME underlying problem, not merely the same words. " +
+        'Reply with JSON only: {"verdicts":[{"key":"ABC-1","same":true,"why":"no more than 15 words"}]}. ' +
+        "Use same=true only when the failure mode AND the affected component match; a shared word like redis, " +
+        "timeout or deploy is not enough. Judge every candidate given.",
+    },
+    {
+      role: "user",
+      content: `NEW ISSUE:\n${String(query).slice(0, 1200)}\n\nCANDIDATES:\n${JSON.stringify(candidates)}`,
+    },
+  ];
+}
+
+/** @forge/llm content is string | ContentPart[]; the text lives in the parts, not in JSON. */
+export function contentText(content) {
+  if (typeof content === "string") return content;
+  if (Array.isArray(content)) {
+    return content.map((p) => (typeof p === "string" ? p : p?.text || "")).join("");
+  }
+  return "";
+}
+
+/** Tolerant parse: models wrap JSON in prose or fences. null = unusable, caller falls back. */
+export function parseJudgement(text) {
+  if (!text) return null;
+  const start = text.indexOf("{");
+  const end = text.lastIndexOf("}");
+  if (start === -1 || end <= start) return null;
+  try {
+    const data = JSON.parse(text.slice(start, end + 1));
+    const list = Array.isArray(data) ? data : data.verdicts;
+    if (!Array.isArray(list)) return null;
+    return list
+      .filter((v) => v && typeof v.key === "string")
+      .map((v) => ({ key: v.key, same: v.same === true, why: String(v.why || "").slice(0, 160) }));
+  } catch {
+    return null;
+  }
+}
+
+/** Annotate ranked items with the verdict; drop the ones the judge says are different. */
+export function applyJudgement(items, verdicts) {
+  if (!verdicts || !verdicts.length) return items;
+  const byKey = new Map(verdicts.map((v) => [v.key, v]));
+  return items
+    .map((i) => {
+      const v = byKey.get(i.key);
+      return v ? { ...i, same: v.same, why: v.why } : i;
+    })
+    .filter((i) => i.same !== false);
+}

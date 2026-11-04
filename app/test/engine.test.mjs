@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { confidence, jqlTextClause, rankCandidates, rankPeople, toJqlText, tokens, verdict } from "../src/engine.js";
+import { applyJudgement, confidence, contentText, jqlTextClause, judgeMessages, parseJudgement, rankCandidates, rankPeople, toJqlText, tokens, verdict } from "../src/engine.js";
 
 // Fixtures mirror the real failure: many issues mention "timeout", three are the same bug.
 const candidates = [
@@ -109,4 +109,55 @@ test("jql clause ORs tokens instead of building one phrase", () => {
     'text ~ "redis" OR text ~ "pool" OR text ~ "exhausted"'
   );
   assert.equal(jqlTextClause(""), "");
+});
+
+// --- judge (P4) ------------------------------------------------------------------
+test("judge prompt carries the query and every candidate, and demands JSON", () => {
+  const msgs = judgeMessages("redis pool exhausted", [
+    { key: "A-1", summary: "one", description: "d1" },
+    { key: "A-2", summary: "two", description: "d2" },
+  ]);
+  assert.equal(msgs.length, 2);
+  assert.equal(msgs[0].role, "system");
+  assert.match(msgs[0].content, /JSON/);
+  assert.match(msgs[1].content, /redis pool exhausted/);
+  assert.match(msgs[1].content, /A-1/);
+  assert.match(msgs[1].content, /A-2/);
+});
+
+test("a fenced or chatty judgement is still parsed; garbage yields null", () => {
+  const clean = parseJudgement('{"verdicts":[{"key":"A-1","same":true,"why":"same pool"}]}');
+  assert.deepEqual(clean, [{ key: "A-1", same: true, why: "same pool" }]);
+
+  const chatty = parseJudgement('Sure! ```json\n{"verdicts":[{"key":"B-2","same":false,"why":"different component"}]}\n``` done');
+  assert.deepEqual(chatty, [{ key: "B-2", same: false, why: "different component" }]);
+
+  assert.equal(parseJudgement("no json here"), null);
+  assert.equal(parseJudgement(""), null);
+  assert.equal(parseJudgement('{"verdicts": "nope"}'), null);
+});
+
+test("judged-different items are dropped, unknown items keep their place", () => {
+  const items = [{ key: "A-1", score: 0.9 }, { key: "A-2", score: 0.5 }];
+  const kept = applyJudgement(items, [
+    { key: "A-1", same: false, why: "different" },
+    { key: "A-2", same: true, why: "same pool" },
+  ]);
+  assert.equal(kept.length, 1);
+  assert.equal(kept[0].key, "A-2");
+  assert.equal(kept[0].why, "same pool");
+
+  // No verdict for A-1 => token ranking stands (fallback path).
+  assert.deepEqual(applyJudgement(items, []), items);
+  assert.equal(applyJudgement(items, null), items);
+});
+
+// Regression: the SDK returns content as ContentPart[], and JSON.stringify on it produced
+// escaped text that no parser could read — the judge silently fell back on every call.
+test("contentText reads both the string and the content-part shapes", () => {
+  assert.equal(contentText("plain"), "plain");
+  assert.equal(contentText([{ type: "text", text: "a" }, { type: "text", text: "b" }]), "ab");
+  assert.equal(contentText([{ type: "text", text: '{"verdicts":[]}' }]), '{"verdicts":[]}');
+  assert.equal(contentText(null), "");
+  assert.equal(contentText(undefined), "");
 });
