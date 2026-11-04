@@ -11,7 +11,7 @@ Read this first in a fresh session. Then `SPEC.md` (product) and `DEMO.md` (film
 | App id | `ari:cloud:ecosystem::app/d0c1b623-3512-4219-8760-0b15e2bd80b2` |
 | Developer Space | Minttu Labs (account: teemu.kuosm@gmail.com) |
 | Live site | `https://one-atlas-boys.atlassian.net` (Forge demo site, ~90 days) |
-| Deployed | `development`, version **3.2.0**, **installed in Jira** on the demo site |
+| Deployed | `development`, version **4.1.0**, **installed in Jira** on the demo site |
 | Credentials | `/opt/workspace/codegeist/.env` (`FORGE_EMAIL`, `FORGE_API_TOKEN`, chmod 600) |
 | Deadline | **2026-12-22 22:00 EET** (Devpost submission) |
 | Milestones | P3 data+eval **Nov 14** · P4 LLM judge+evidence **Nov 28** · P5 agent filmed **Dec 8 (hard gate)** · video cut **Dec 15** · submit **Dec 20** |
@@ -68,7 +68,7 @@ Entry log line in `onIssueCreated` means "no comment" can be told apart from "ne
 3. **`read:graph:jira` is NOT declared yet.** TWG scopes force an **org-admin install** for judges; the scope goes in at P4 together with the query, behind the Jira-native fallback in SPEC §7.
 4. **Teamwork Graph is CUT (Teemu, 2026-11-04)** — EAP plus an Atlassian support allowlist is external latency, not a task. Marketplace listing also not claimed.
 5. **One app, one engine, two front doors** (panel + trigger). "Safe Hands" bulk ops stay out — see SPEC §12 for why.
-6. **No LLM yet.** Matching is token-overlap. The Forge LLM judge is a P4 upgrade and has **no free tier** (billed to the app developer).
+6. **LLM judge is live (P4, 2026-11-04, v4.1.0).** Forge LLMs API, `claude-haiku-4-5-20251001`, top-5 only, JSON verdicts. Billing is on the Developer Space (no free tier, ~1c per issue). **No cache** — deliberate: a cache is a failure mode of its own at demo volume. Any parse/API failure falls back to token ranking, never to silence. `llm` module = major version; install upgrade needed admin approval.
 
 ## Gotchas that cost real time
 
@@ -77,6 +77,13 @@ Entry log line in `onIssueCreated` means "no comment" can be told apart from "ne
 - `forge register --personal` fails once a Developer Space exists.
 - `forge install` needs the full flag set: `--demo-site --product Jira -e development`.
 - `forge site provision` times out in the CLI but keeps provisioning server-side.
+- `@forge/llm` returns `message.content` as **ContentPart[]**, not a string — `JSON.stringify` on it
+  yields escaped text no parser can read (the judge silently fell back on every call until fixed).
+  `contentText()` in engine.js is the only correct extraction.
+- Adding the `llm` module is a **major version**: `forge deploy --approve MAJOR_VERSION_RULE`,
+  then `forge install --demo-site --product Jira -e development --non-interactive --confirm-scopes --upgrade`.
+- A trigger added in a deployment is **not** listening until a redeploy + install upgrade has happened;
+  `forge logs -f radar-fn` showing nothing is ambiguous unless the handler logs at entry.
 
 ## Next up
 
@@ -94,7 +101,12 @@ Entry log line in `onIssueCreated` means "no comment" can be told apart from "ne
   receipts, and the control issue matches nothing.
 - Record `raw-P3-panel.mp4` (see DEMO.md).
 
-**P4 — Teamwork Graph + LLM judge** (then re-decide the org-admin trade-off)
+**P4 — judge: LIVE (v4.1.0, 2026-11-04).** Verified on MOBL-69: comment cites MOBL-60 + MOBL-61
+with reasons, and drops the near-miss/weaker token matches. Remaining P4 work: the 10-pair + 3-control
+eval and the number to publish ("X/10 top-3, Y/3 false positives"), then broaden "who knows"
+to labelled evidence types (diagnosed-it, wrote-it-up).
+
+**P4b — Teamwork Graph + LLM judge** (then re-decide the org-admin trade-off) — TWG is **cut**.
 **P5 — `rovo:skill` + `rovo:agent`** (manifest-only, but only after there is data worth citing)
 **P6 — video, listing decision, Devpost form**
 
