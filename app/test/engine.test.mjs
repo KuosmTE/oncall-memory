@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { applyJudgement, confidence, contentText, jqlTextClause, judgeMessages, KIND_LABEL, parseJudgement, rankCandidates, rankPeople, receiptText, receiptsText, toJqlText, tokens, verdict } from "../src/engine.js";
+import { applyJudgement, confidence, contentText, jqlTextClause, judgeMessages, KIND_LABEL, parseJudgement, rankCandidates, rankPeople, receiptText, receiptsText, resultNote, toJqlText, tokens, verdict } from "../src/engine.js";
 
 // Fixtures mirror the real failure: many issues mention "timeout", three are the same bug.
 const candidates = [
@@ -223,4 +223,10 @@ test("contentText reads both the string and the content-part shapes", () => {
   assert.equal(contentText([{ type: "text", text: '{"verdicts":[]}' }]), '{"verdicts":[]}');
   assert.equal(contentText(null), "");
   assert.equal(contentText(undefined), "");
+});
+
+test("the empty state never says 'among the 0 most recent matches'", () => {
+  assert.equal(resultNote([], 0), "No resolved issue in this project shares vocabulary with this ticket.");
+  assert.match(resultNote([], 7), /Checked the 7 most recent resolved matches/);
+  assert.match(resultNote([{ key: "A" }], 1), /1 most recent resolved match in this project/);
 });

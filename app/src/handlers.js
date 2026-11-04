@@ -212,9 +212,7 @@ export async function buildCard({ issueKey, text } = {}, mode = "user") {
     items,
     people: rankPeople([...byPerson.values()], 3),
     confidence: confidence(items),
-    note: items.length
-      ? `Checked the ${issues.length} most recent resolved matches in this project.`
-      : `No similar resolved issues among the ${issues.length} most recent matches in this project.`,
+    note: resultNote(items, issues.length),
   };
 }
 

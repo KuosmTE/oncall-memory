@@ -227,3 +227,13 @@ export function applyJudgement(items, verdicts) {
     })
     .filter((i) => i.same !== false);
 }
+
+/**
+ * The line under the card. The empty state is the most-screenshotted thing in the demo,
+ * so "among the 0 most recent matches" is not allowed to exist.
+ */
+export function resultNote(items, scanned) {
+  if (items.length) return `Checked the ${scanned} most recent resolved match${scanned === 1 ? "" : "es"} in this project.`;
+  if (scanned === 0) return "No resolved issue in this project shares vocabulary with this ticket.";
+  return `Checked the ${scanned} most recent resolved matches — none looked like this.`;
+}
