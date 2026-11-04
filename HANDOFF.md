@@ -11,7 +11,7 @@ Read this first in a fresh session. Then `SPEC.md` (product) and `DEMO.md` (film
 | App id | `ari:cloud:ecosystem::app/d0c1b623-3512-4219-8760-0b15e2bd80b2` |
 | Developer Space | Minttu Labs (account: teemu.kuosm@gmail.com) |
 | Live site | `https://one-atlas-boys.atlassian.net` (Forge demo site, ~90 days) |
-| Deployed | `development`, version **3.0.0**, **installed in Jira** on the demo site |
+| Deployed | `development`, version **3.2.0**, **installed in Jira** on the demo site |
 | Credentials | `/opt/workspace/codegeist/.env` (`FORGE_EMAIL`, `FORGE_API_TOKEN`, chmod 600) |
 | Deadline | **2026-12-22 22:00 EET** (Devpost submission) |
 | Milestones | P3 data+eval **Nov 14** · P4 LLM judge+evidence **Nov 28** · P5 agent filmed **Dec 8 (hard gate)** · video cut **Dec 15** · submit **Dec 20** |
@@ -55,16 +55,20 @@ app/test/engine.test.mjs          node:test, no deps
   `npm run check` is now `npm test && forge lint`).
 - Tests 7 → 13, including the hostile-JQL-title table.
 
-**Still unproven at runtime:** the radar has never fired (no issue created since install).
-Create one throwaway issue on the demo site, then `forge logs -f radar-fn -s 5m`.
+**Proven at runtime (2026-11-04):** radar fires and comments — MOBL-67 received the radar comment
+naming MOBL-58/59/63 with people. Two defects surfaced doing it: (1) the trigger did not register
+until a redeploy *after* install, so "deployed" ≠ "listening"; (2) `text ~ "a b c"` is a PHRASE
+query and matched nothing — now ORed per token by `jqlTextClause` in engine.js (test 14).
+Entry log line in `onIssueCreated` means "no comment" can be told apart from "never invoked".
 
 ## Decisions taken (do not silently reverse)
 
 1. **Custom UI, not UI Kit.** UI Kit needs a React build toolchain and `index.html` anyway; plain DOM + esbuild is smaller and fully ours. React deps were removed.
 2. **The only write is one comment** on a newly created issue (the radar). `write:jira-work` is declared for it. Everything else is read-only.
 3. **`read:graph:jira` is NOT declared yet.** TWG scopes force an **org-admin install** for judges; the scope goes in at P4 together with the query, behind the Jira-native fallback in SPEC §7.
-4. **One app, one engine, two front doors** (panel + trigger). "Safe Hands" bulk ops stay out — see SPEC §12 for why.
-5. **No LLM yet.** Matching is token-overlap. The Forge LLM judge is a P4 upgrade and has **no free tier** (billed to the app developer).
+4. **Teamwork Graph is CUT (Teemu, 2026-11-04)** — EAP plus an Atlassian support allowlist is external latency, not a task. Marketplace listing also not claimed.
+5. **One app, one engine, two front doors** (panel + trigger). "Safe Hands" bulk ops stay out — see SPEC §12 for why.
+6. **No LLM yet.** Matching is token-overlap. The Forge LLM judge is a P4 upgrade and has **no free tier** (billed to the app developer).
 
 ## Gotchas that cost real time
 
@@ -77,7 +81,10 @@ Create one throwaway issue on the demo site, then `forge logs -f radar-fn -s 5m`
 ## Next up
 
 **P3 — make the panel mean something**
-- Add to `.env` a **Jira-scoped** token (the Forge token cannot call Jira REST):
+- **Seeded 2026-11-04** in `MOBL` (Mobile Dev, 53 pre-existing issues, 6 human assignees):
+  MOBL-58…64 = 2 similar, 3 paraphrase, 1 near-miss, 1 control, all Done with people attached.
+  MOBL-65/66/67 are throwaway radar-test issues (delete before filming).
+- Add to `.env` a **Jira-scoped** token (the Forge token cannot call Jira REST) — **done 2026-11-04**.
   `JIRA_BASE=https://one-atlas-boys.atlassian.net`, `JIRA_EMAIL=…`, `JIRA_API_TOKEN=…`
 - Run `tools/seed-incidents.py --project <KEY> --dry-run` first, then without `--dry-run`.
   It creates 5 same-failure incidents (varied wording) + 1 unrelated control, assigns them

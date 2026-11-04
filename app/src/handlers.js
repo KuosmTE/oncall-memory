@@ -5,7 +5,7 @@
 // takes a mode and the trigger passes "app". Getting this wrong fails silently.
 
 import api, { route } from "@forge/api";
-import { confidence, rankCandidates, rankPeople, toJqlText } from "./engine.js";
+import { confidence, jqlTextClause, rankCandidates, rankPeople, toJqlText } from "./engine.js";
 
 const FIELDS = ["summary", "description", "resolution", "resolutiondate", "assignee", "comment", "status"];
 const KEY_RE = /^[A-Z][A-Z0-9_]*-[0-9]+$/;
@@ -92,7 +92,7 @@ export async function buildCard({ issueKey, text } = {}, mode = "user") {
 
   const scope = projectKey ? `project = "${projectKey}" AND ` : "";
   const notSelf = issueKey && KEY_RE.test(issueKey) ? ` AND key != "${issueKey}"` : "";
-  const jql = `${scope}text ~ "${words}" AND statusCategory = Done${notSelf} ORDER BY resolved DESC`;
+  const jql = `${scope}(${jqlTextClause(words)}) AND statusCategory = Done${notSelf} ORDER BY resolved DESC`;
 
   const issues = await search(jql, mode);
   const items = rankCandidates(words, issues.map(toCandidate), 5);
@@ -163,6 +163,8 @@ function commentBody(card) {
  */
 export async function onIssueCreated(event) {
   const key = event?.issue?.key;
+  // One line at entry: without it, "no comment" cannot be told apart from "never invoked".
+  console.log(`radar entry: ${event?.eventType || "no-eventType"} ${key || "no-key"}`);
   if (!key || !KEY_RE.test(key)) return;
 
   try {

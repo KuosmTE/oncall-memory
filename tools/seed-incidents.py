@@ -21,6 +21,7 @@ import argparse
 import base64
 import json
 import os
+import re
 import sys
 import urllib.error
 import urllib.parse
@@ -119,9 +120,13 @@ def main():
     project = jira.get(f"/rest/api/3/project/{urllib.parse.quote(args.project)}")
     type_id, type_name = pick_issue_type(project)
     users = jira.get(
-        f"/rest/api/3/user/assignable/search?project={urllib.parse.quote(args.project)}&maxResults=10"
+        f"/rest/api/3/user/assignable/search?project={urllib.parse.quote(args.project)}&maxResults=50"
     )
-    accounts = [u["accountId"] for u in users] or [None]
+    # Demo sites are full of service accounts (config-fy26-bot, OneAtlassian Bitbucket, …).
+    # They are accountType=atlassian, so type filtering does not help — names do.
+    # "Who knows" must rank people; a bot with a receipt is a lie with a citation.
+    BOT = re.compile(r"bot|agent|bitbucket|provision|guardrail|config-|automation", re.I)
+    accounts = [u["accountId"] for u in users if not BOT.search(u.get("displayName", ""))][:6] or [None]
 
     print(f"site      {jira.base}")
     print(f"as        {me.get('displayName')} <{me.get('emailAddress')}>")
@@ -135,7 +140,20 @@ def main():
         return 0
 
     created = []
+    found = jira.get(
+        f"/rest/api/3/search/jql?jql={urllib.parse.quote(f'project={project['key']} AND labels=oncall-seed')}&maxResults=100&fields=summary,status"
+    ).get("issues", [])
+    existing = {i["fields"]["summary"]: i for i in found}
     for i, (summary, desc, kind) in enumerate(plan):
+        prior = existing.get(summary)
+        if prior:
+            # A previous run may have died between create and transition — finish it, do not duplicate.
+            if prior["fields"]["status"]["statusCategory"]["key"] != "done":
+                tid = done_transition(jira, prior["key"])
+                if tid:
+                    jira.call("POST", f"/rest/api/3/issue/{prior['key']}/transitions", {"transition": {"id": tid}})
+            print(f"  = skip (exists) [{kind}] {summary}")
+            continue
         issue = jira.call(
             "POST",
             "/rest/api/3/issue",
@@ -155,8 +173,12 @@ def main():
             jira.call("PUT", f"/rest/api/3/issue/{key}/assignee", {"accountId": acct})
         tid = done_transition(jira, key)
         if tid:
-            jira.call("POST", f"/rest/api/3/issue/{key}/transitions",
-                      {"transition": {"id": tid}, "fields": {"resolution": {"name": "Done"}}})
+            # Workflow screens differ per project: MOBL rejects `resolution`, others require it.
+            try:
+                jira.call("POST", f"/rest/api/3/issue/{key}/transitions",
+                          {"transition": {"id": tid}, "fields": {"resolution": {"name": "Done"}}})
+            except RuntimeError:
+                jira.call("POST", f"/rest/api/3/issue/{key}/transitions", {"transition": {"id": tid}})
         created.append((key, kind, summary))
         print(f"  ✓ {key} [{kind}] {summary}")
 

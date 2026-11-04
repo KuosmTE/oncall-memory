@@ -23,6 +23,19 @@ export function toJqlText(text, limit = 8) {
 }
 
 /**
+ * JQL `text ~ "a b c"` is a PHRASE query — it only matches those words adjacent, which for
+ * tokens pulled out of a ticket summary matches nothing. What we want is a dumb OR over the
+ * tokens; rankCandidates does the real judging. Tokens are already charset-sanitised by tokens().
+ */
+export function jqlTextClause(words) {
+  return words
+    .split(" ")
+    .filter(Boolean)
+    .map((w) => `text ~ "${w}"`)
+    .join(" OR ");
+}
+
+/**
  * Re-rank Jira search hits against the query they were searched for.
  * JQL `text ~` is a dumb OR; this decides which hits actually describe the same problem.
  * ponytail: token overlap, not embeddings. Upgrade path = Forge LLM judge on the top 5.

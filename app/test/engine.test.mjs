@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { confidence, rankCandidates, rankPeople, toJqlText, tokens, verdict } from "../src/engine.js";
+import { confidence, jqlTextClause, rankCandidates, rankPeople, toJqlText, tokens, verdict } from "../src/engine.js";
 
 // Fixtures mirror the real failure: many issues mention "timeout", three are the same bug.
 const candidates = [
@@ -100,4 +100,13 @@ test("verdict states the receipt rule, including when there is nothing", () => {
 
 test("tokenizer drops stopwords and short noise", () => {
   assert.deepEqual(tokens("The Redis pool is exhausted!"), ["redis", "pool", "exhausted"]);
+});
+
+// The bug this guards: `text ~ "a b c"` is a phrase, so a summary's tokens matched nothing.
+test("jql clause ORs tokens instead of building one phrase", () => {
+  assert.equal(
+    jqlTextClause("redis pool exhausted"),
+    'text ~ "redis" OR text ~ "pool" OR text ~ "exhausted"'
+  );
+  assert.equal(jqlTextClause(""), "");
 });
