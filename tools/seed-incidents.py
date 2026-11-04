@@ -29,6 +29,7 @@ import json
 import os
 import re
 import sys
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -130,6 +131,37 @@ CORPUS = [
      "Device shows up as unmanaged, profile install fails."),
 ]
 WORKFLOW_LABELS = ("oncall-seed",)
+# The radar comments on every newly created issue that already has Done matches — including
+# fixture issues. A fixture whose "last fix" quotes our own radar comment is contaminated
+# (the comment carries other families' summaries), so the seeder removes those comments.
+RADAR_MARK = "this looks like it has happened before"
+
+
+def adf_to_text(node):
+    if not node:
+        return ""
+    if isinstance(node, str):
+        return node
+    if isinstance(node, list):
+        return " ".join(filter(None, (adf_to_text(n) for n in node)))
+    parts = [node["text"]] if node.get("text") else []
+    parts += [adf_to_text(c) for c in node.get("content") or []]
+    return " ".join(p for p in parts if p)
+
+
+def strip_radar_comments(jira, key):
+    """Delete app-written radar comments from a corpus issue; returns how many were removed.
+
+    Only the app's marker is matched, so a human's real fix note is never touched.
+    """
+    comments = jira.get(f"/rest/api/3/issue/{urllib.parse.quote(key)}/comment?maxResults=100")
+    removed = 0
+    for c in comments.get("comments", []):
+        author = (c.get("author") or {}).get("displayName", "")
+        if RADAR_MARK in adf_to_text(c.get("body")) and "on-call" in author.lower():
+            jira.call("DELETE", f"/rest/api/3/issue/{urllib.parse.quote(key)}/comment/{c['id']}")
+            removed += 1
+    return removed
 
 
 def load_env(path=Path(__file__).resolve().parent.parent / ".env"):
@@ -287,6 +319,25 @@ def main():
             print(f"  ✓ {key} [{family}/{kind}] {summary}")
             by_summary[summary] = {"key": key, "fields": {"summary": summary, "labels": ["oncall-seed", kind, slot]}}
         manifest[slot] = {"key": key, "family": family, "kind": kind, "summary": summary}
+
+    # The radar fires on the issues this script just created (they are new Jira issues like any
+    # other). Its comment becomes the issue's "last fix" in the app — a fixture quoting itself,
+    # carrying other families' words. Sweep it off, including comments that arrive a little late
+    # (product-event delivery can lag by minutes).
+    keys_to_clean = [m["key"] for m in manifest.values()]
+    removed_total = 0
+    while True:
+        removed = sum(strip_radar_comments(jira, k) for k in keys_to_clean)
+        if not removed:
+            break
+        removed_total += removed
+        print(f"  - removed {removed} radar comment(s) from corpus issues")
+        time.sleep(3)
+    if created:
+        # Give a lagging trigger a chance to comment on the fresh issues, then sweep again.
+        time.sleep(30)
+        removed_total += sum(strip_radar_comments(jira, k) for k in keys_to_clean)
+    print(f"cleaned   {removed_total} radar comment(s) off the corpus (a fixture must not cite itself)")
 
     out = Path(__file__).resolve().parent / "seed-manifest.json"
     out.write_text(json.dumps(

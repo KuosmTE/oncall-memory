@@ -222,6 +222,22 @@ def validate_expected(jira, project, pairs):
         sys.exit("fatal: eval-pairs.json points at issues that are not ground truth:\n  " + "\n  ".join(bad))
 
 
+def assert_corpus_clean(jira, keys):
+    """A fixture whose 'last fix' is our own radar comment carries other families' words.
+
+    That contaminates retrieval, so the eval refuses to measure on a dirty corpus instead of
+    publishing a number it cannot defend. The seeder sweeps these comments off.
+    """
+    dirty = []
+    for key in keys:
+        comments = jira.get(
+            f"/rest/api/3/issue/{urllib.parse.quote(key)}/comment?maxResults=100"
+        ).get("comments", [])
+        if any(RADAR_MARKER in adf_text(c.get("body")) for c in comments):
+            dirty.append(key)
+    return dirty
+
+
 def create_or_reuse(jira, project, queries, issue_type_id):
     """Create the query issues (labels oncall-eval). Reuses an existing one by summary."""
     existing = jira.search(
@@ -372,6 +388,14 @@ def main():
     manifest = json.loads(manifest_path.read_text())["corpus"] if manifest_path.exists() else {}
     near_miss = {v["key"] for v in manifest.values() if v["kind"] == "near-miss"}
 
+    dirty = assert_corpus_clean(jira, [v["key"] for v in manifest.values()])
+    if dirty:
+        sys.exit(
+            "fatal: corpus issues carry radar comments: " + ", ".join(dirty)
+            + "\n       A fixture whose 'last fix' quotes the radar is contaminated (other"
+              " families' summaries leak in). Run tools/seed-incidents.py to sweep them."
+        )
+
     print(f"\ncreating {len(pairs) + len(controls)} query issues (label oncall-eval)")
     queries = [{**p, "kind": "pair"} for p in pairs] + [{**c, "kind": "control"} for c in controls]
     key_by_id = create_or_reuse(jira, args.project, queries, type_id)
@@ -435,9 +459,13 @@ def main():
 
     if unparsable:
         print(f"\nUNPARSABLE comments: {', '.join(unparsable)} — ADF shape changed, keys not found")
-    if pending:
-        print(f"\nno radar comment within {args.poll_seconds}s: {', '.join(pending)} "
-              f"(keys: {', '.join(key_by_id[q] for q in pending)})")
+    pending_pairs = [q for q in pending if q in {p["id"] for p in pairs}]
+    pending_controls = [q for q in pending if q in {c["id"] for c in controls}]
+    if pending_pairs:
+        print(f"\npairs with NO radar comment within {args.poll_seconds}s: "
+              f"{', '.join(pending_pairs)} (keys: {', '.join(key_by_id[q] for q in pending_pairs)})")
+    if pending_controls:
+        print(f"controls correctly silent: {', '.join(pending_controls)}")
     misses = [r for r in results if not r["hit"]]
     if misses:
         print("\nwhy the misses happened")
@@ -445,9 +473,16 @@ def main():
             d = r.get("diagnosis") or {}
             print(f"  {r['id']:14} [{d.get('stage', '?')}] {d.get('detail', 'no comment, no diagnosis')}")
 
-    passed = hits >= PASS_RECALL and fps == 0 and not unparsable
+    subset = len(results) < len(spec["pairs"])
+    if subset:
+        passed = fps == 0 and not unparsable
+        verdict = (f"SUBSET ({len(results)} of {len(spec['pairs'])} pairs) — 8/10 threshold not applied"
+                   if passed else "FAIL")
+    else:
+        passed = hits >= PASS_RECALL and fps == 0 and not unparsable
+        verdict = f"{'PASS' if passed else 'FAIL'} (threshold {PASS_RECALL}/{len(results)}, 0 controls)"
     print(f"\nRESULT {hits}/{len(results)} top-3 · {fps}/{len(control_results)} control false positives"
-          f" · {'PASS' if passed else 'FAIL'} (threshold {PASS_RECALL}/{len(results)}, 0 controls)")
+          f" · {verdict}")
 
     out_path = Path(args.out) if args.out else HERE / f"eval-{datetime.now().strftime('%Y%m%d')}.json"
     payload = {
@@ -466,8 +501,10 @@ def main():
             "control_false_positives": fps,
             "controls_total": len(control_results),
             "unparsable": unparsable,
-            "no_comment": sorted(pending),
-            "threshold": f"{PASS_RECALL}/{len(results)}",
+            "pairs_no_comment": sorted(pending_pairs),
+            "controls_silent": sorted(pending_controls),
+            "subset": subset,
+            "threshold": f"{PASS_RECALL}/{len(spec['pairs'])}" if not subset else "n/a (subset run)",
             "passed": passed,
         },
     }

@@ -88,24 +88,25 @@ Entry log line in `onIssueCreated` means "no comment" can be told apart from "ne
 
 ## Next up
 
-**P3 — make the panel mean something**
-- **Seeded 2026-11-04** in `MOBL` (Mobile Dev, 53 pre-existing issues, 6 human assignees):
-  MOBL-58…64 = 2 similar, 3 paraphrase, 1 near-miss, 1 control, all Done with people attached.
-  MOBL-65/66/67 are throwaway radar-test issues (delete before filming).
-- Add to `.env` a **Jira-scoped** token (the Forge token cannot call Jira REST) — **done 2026-11-04**.
-  `JIRA_BASE=https://one-atlas-boys.atlassian.net`, `JIRA_EMAIL=…`, `JIRA_API_TOKEN=…`
-- Run `tools/seed-incidents.py --project <KEY> --dry-run` first, then without `--dry-run`.
-  It creates 5 same-failure incidents (varied wording) + 1 unrelated control, assigns them
-  across assignable users, and transitions them to Done. Verified to fail loudly when
-  credentials are missing; not yet run against the live site.
-- Acceptance: open a 6th similar issue → panel shows ≥2 "happened before" and ≥1 person with
-  receipts, and the control issue matches nothing.
-- Record `raw-P3-panel.mp4` (see DEMO.md).
+**P3 — seeded + measured (2026-11-04).**
+- **Corpus 27 Done issues** in `MOBL`, four failure families (redis/connection-pool, bad-deploy,
+  disk-full, auth-token-expiry) × 2 same-vocabulary + 3 paraphrases, 1 near-miss each, plus
+  3 unrelated controls. `tools/seed-incidents.py` is idempotent and writes
+  `tools/seed-manifest.json` (slot → real key).
+- **Published eval: 10/10 top-3 · 0/3 control false positives** (`tools/eval-20261104.json`),
+  measured on the LIVE radar path (trigger → LLM judge → comment) with the 13 query issues
+  created by `tools/eval-recall.py`. Do not quote a number from unit fixtures.
+- Gotcha that cost a run: the radar comments on *any* new issue, so every fixture seed got a
+  radar comment, which became its "last fix" and leaked other families' words into retrieval.
+  The seeder now sweeps those comments off and `eval-recall.py` refuses to measure on a dirty
+  corpus (`assert_corpus_clean`).
+- Eval query issues MOBL-103…115 stay in Jira (label `oncall-eval`) — delete before filming.
+- Still open from P3: `raw-P3-panel.mp4` (see DEMO.md).
 
 **P4 — judge: LIVE (v4.1.0, 2026-11-04).** Verified on MOBL-69: comment cites MOBL-60 + MOBL-61
-with reasons, and drops the near-miss/weaker token matches. Remaining P4 work: the 10-pair + 3-control
-eval and the number to publish ("X/10 top-3, Y/3 false positives"), then broaden "who knows"
-to labelled evidence types (diagnosed-it, wrote-it-up).
+with reasons, and drops the near-miss/weaker token matches. The 10-pair + 3-control eval is
+done (10/10, 0/3 above). Remaining P4 work: broaden "who knows" to labelled evidence types
+(diagnosed-it, wrote-it-up).
 
 **P4b — Teamwork Graph + LLM judge** (then re-decide the org-admin trade-off) — TWG is **cut**.
 **P5 — `rovo:skill` + `rovo:agent`** (manifest-only, but only after there is data worth citing)
