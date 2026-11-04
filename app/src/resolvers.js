@@ -30,7 +30,14 @@ export async function panelData(payload) {
       })),
       people: card.people.map((p) => ({
         person: p.person,
-        receipts: p.receipts,
+        // Each receipt keeps its kind: "resolved" / "diagnosed" / "wrote up" are different claims.
+        evidence: p.evidence.map((e) => ({
+          kind: e.kind,
+          issueKey: e.issueKey,
+          date: e.date ? e.date.slice(0, 10) : null,
+        })),
+        kinds: p.kinds,
+        receipts: p.receipts, // plain keys, for callers that only want the links
         lastResolved: p.lastResolved ? p.lastResolved.slice(0, 10) : null,
       })),
       note: card.note,

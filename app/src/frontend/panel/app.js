@@ -6061,6 +6061,14 @@ Please see https://iframe-resizer.com/upgrade for more details.
 
   // src/frontend/panel/src/main.js
   var import_bridge = __toESM(require_out3(), 1);
+
+  // src/engine.js
+  var STOP = new Set(
+    "the a an and or of for to in on with is was were be been it this that from at as by not no you your we our when then there here".split(" ")
+  );
+  var KIND_LABEL = { resolved: "resolved", diagnosed: "diagnosed", wrote: "wrote up" };
+
+  // src/frontend/panel/src/main.js
   var app = document.getElementById("app");
   function h(tag, props = {}, ...children) {
     const node = document.createElement(tag);
@@ -6078,11 +6086,13 @@ Please see https://iframe-resizer.com/upgrade for more details.
     return h("section", {}, h("h2", {}, title), ...rows);
   }
   function peopleRow(p) {
-    const links = (p.receipts || []).map((k) => issueLink(k));
+    const evidence = p.evidence?.length ? p.evidence : (p.receipts || []).map((k) => ({ kind: "resolved", issueKey: k }));
     const line = h("span", { class: "why" });
-    links.forEach((a, i) => {
-      line.append(a);
-      if (i < links.length - 1) line.append(document.createTextNode(" \xB7 "));
+    evidence.forEach((e, i) => {
+      line.append(h("span", { class: "kind" }, KIND_LABEL[e.kind] || e.kind));
+      line.append(document.createTextNode(" \u2014 "));
+      line.append(issueLink(e.issueKey));
+      if (i < evidence.length - 1) line.append(document.createTextNode(" \xB7 "));
     });
     if (p.lastResolved) line.append(document.createTextNode(` \xB7 last resolved ${p.lastResolved}`));
     return h("div", { class: "row" }, h("span", { class: "name" }, p.person), line);

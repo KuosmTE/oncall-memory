@@ -11,7 +11,7 @@ Read this first in a fresh session. Then `SPEC.md` (product) and `DEMO.md` (film
 | App id | `ari:cloud:ecosystem::app/d0c1b623-3512-4219-8760-0b15e2bd80b2` |
 | Developer Space | Minttu Labs (account: teemu.kuosm@gmail.com) |
 | Live site | `https://one-atlas-boys.atlassian.net` (Forge demo site, ~90 days) |
-| Deployed | `development`, version **4.1.0**, **installed in Jira** on the demo site |
+| Deployed | `development`, version **4.2.0**, **installed in Jira** on the demo site |
 | Credentials | `/opt/workspace/codegeist/.env` (`FORGE_EMAIL`, `FORGE_API_TOKEN`, chmod 600) |
 | Deadline | **2026-12-22 22:00 EET** (Devpost submission) |
 | Milestones | P3 data+eval **Nov 14** · P4 LLM judge+evidence **Nov 28** · P5 agent filmed **Dec 8 (hard gate)** · video cut **Dec 15** · submit **Dec 20** |
@@ -21,12 +21,13 @@ Read this first in a fresh session. Then `SPEC.md` (product) and `DEMO.md` (film
 ```bash
 cd /opt/workspace/codegeist && set -a && . ./.env && set +a   # auth, no keychain, no forge login
 cd app
-npm test                      # 13 engine tests, no network
+npm test                      # 23 engine tests, no network
 npm run check                 # test + forge lint (the validator script was deleted: no PyYAML on this box)
 npm run build:panel           # esbuild the Custom UI bundle → src/frontend/panel/app.js
 npx forge lint                # must say "No issues found"
 npm run forge:deploy          # builds the panel bundle first — never call forge deploy bare
 npx forge install --demo-site --product Jira -e development --non-interactive --confirm-scopes --upgrade
+cd .. && node tools/panel-probe.mjs MOBL-69   # the panel's resolver JSON, without a browser
 ```
 
 ## Architecture
@@ -70,6 +71,14 @@ Entry log line in `onIssueCreated` means "no comment" can be told apart from "ne
 5. **One app, one engine, two front doors** (panel + trigger). "Safe Hands" bulk ops stay out — see SPEC §12 for why.
 6. **LLM judge is live (P4, 2026-11-04, v4.1.0).** Forge LLMs API, `claude-haiku-4-5-20251001`, top-5 only, JSON verdicts. Billing is on the Developer Space (no free tier, ~1c per issue). **No cache** — deliberate: a cache is a failure mode of its own at demo volume. Any parse/API failure falls back to token ranking, never to silence. `llm` module = major version; install upgrade needed admin approval.
 7. **The demo project is `MOBL` (Atlassian sample "Mobile Dev"), not `OCD`** — Teemu's clean private space stays clean for the fresh-install/incognito test. MOBL already has 53 sample issues spanning 2021→2026 and 6 sample people, so the 0:00 pain shot and the 0:40 panel shot share one realistic stage; OCD has one assignable user, which would reduce "who knows" to a single name. Seeded issues carry `labels=oncall-seed` and are deletable in one JQL.
+8. **Three labelled evidence kinds, Jira-native only (P4#2, v4.2.0).** `resolved` = assignee on
+   the matched resolved issue · `diagnosed` = author of the fix comment we already fetch for
+   `lastFix` (zero extra requests) · `wrote up` = actor of the `resolution` transition from the
+   issue changelog. The changelog is fetched per surviving match (≤5), **not** added to the search
+   call: measured 49 KB → 142 KB (2.9x) for 25 issues with `expand=changelog`. `rankPeople` dedupes
+   by (person, issue, kind), ranks by distinct issues then kind count, and still drops any name
+   with no receipt. No Confluence scope, no `read:graph:*`. `tools/seed-fix-comments.py` adds the
+   in-family fix comments the `diagnosed` kind needs (the seeded corpus had none).
 
 ## Gotchas that cost real time
 
@@ -85,6 +94,16 @@ Entry log line in `onIssueCreated` means "no comment" can be told apart from "ne
   then `forge install --demo-site --product Jira -e development --non-interactive --confirm-scopes --upgrade`.
 - A trigger added in a deployment is **not** listening until a redeploy + install upgrade has happened;
   `forge logs -f radar-fn` showing nothing is ambiguous unless the handler logs at entry.
+- `forge invoke` does not exist. The panel sits behind a site login, so panel output is inspected
+  with `tools/panel-probe.mjs`: it runs the real `resolvers.js`/`handlers.js` against the real Jira
+  REST API, with `tools/forge-shim/*` standing in for `@forge/api` and `@forge/llm`. The shimmed
+  judge therefore takes its documented fallback (token ranking stands) — the deployed radar is
+  where the real judge runs. Quote panel JSON from the probe, radar bodies from the Jira API.
+- `tools/eval-recall.py` now **deletes and recreates** the `oncall-eval` fixtures. Reusing them
+  silently scored the previous deployment: the trigger only fires on create, so a reused issue
+  still carries the old comment and the run reports the old build's number.
+- The seeded corpus had no comments at all, so `diagnosed` could not appear anywhere. Run
+  `tools/seed-fix-comments.py` after `seed-incidents.py`; both are idempotent.
 
 ## Next up
 
@@ -105,8 +124,8 @@ Entry log line in `onIssueCreated` means "no comment" can be told apart from "ne
 
 **P4 — judge: LIVE (v4.1.0, 2026-11-04).** Verified on MOBL-69: comment cites MOBL-60 + MOBL-61
 with reasons, and drops the near-miss/weaker token matches. The 10-pair + 3-control eval is
-done (10/10, 0/3 above). Remaining P4 work: broaden "who knows" to labelled evidence types
-(diagnosed-it, wrote-it-up).
+done (10/10, 0/3 above). **P4#2 — three evidence kinds: LIVE (v4.2.0, 2026-11-04)** — panel and
+radar print `resolved` / `diagnosed` / `wrote up` per receipt (SPEC §7, HANDOFF decision 8).
 
 **P4b — Teamwork Graph + LLM judge** (then re-decide the org-admin trade-off) — TWG is **cut**.
 **P5 — `rovo:skill` + `rovo:agent`** (manifest-only, but only after there is data worth citing)

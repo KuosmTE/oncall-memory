@@ -1,5 +1,6 @@
 // Custom UI panel. Plain DOM, no framework: the resolver already shaped the data.
 import { invoke } from "@forge/bridge";
+import { KIND_LABEL } from "../../../engine.js";
 
 const app = document.getElementById("app");
 
@@ -23,12 +24,17 @@ function section(title, rows) {
 }
 
 function peopleRow(p) {
-  // Receipts are links: the demo beat is "click the person, land on the issue that proves it".
-  const links = (p.receipts || []).map((k) => issueLink(k));
+  // Receipts are labelled links: "wrote up — MOBL-61". The label is the whole point — a name
+  // without the kind of evidence is a guess dressed as a receipt. Two lines: name, receipts.
+  const evidence = p.evidence?.length
+    ? p.evidence
+    : (p.receipts || []).map((k) => ({ kind: "resolved", issueKey: k }));
   const line = h("span", { class: "why" });
-  links.forEach((a, i) => {
-    line.append(a);
-    if (i < links.length - 1) line.append(document.createTextNode(" · "));
+  evidence.forEach((e, i) => {
+    line.append(h("span", { class: "kind" }, KIND_LABEL[e.kind] || e.kind));
+    line.append(document.createTextNode(" — "));
+    line.append(issueLink(e.issueKey));
+    if (i < evidence.length - 1) line.append(document.createTextNode(" · "));
   });
   if (p.lastResolved) line.append(document.createTextNode(` · last resolved ${p.lastResolved}`));
 

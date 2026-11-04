@@ -2,10 +2,10 @@
 """Measure the live radar: top-3 recall on 10 labelled pairs + false positives on 3 controls.
 
 This is the number the Codegeist submission quotes ("X/10 top-3, Y/3 false positives").
-It measures the DEPLOYED app, not the unit fixtures: it creates the query issues in Jira,
-waits for the `avi:jira:created:issue` trigger to post the On-Call Memory comment (platform
-lag up to 3 minutes), parses the issue keys out of that comment's ADF, and scores them
-against hand-labelled ground truth in tools/eval-pairs.json.
+It measures the DEPLOYED app, not the unit fixtures: it deletes the previous fixtures and
+creates the query issues in Jira, waits for the `avi:jira:created:issue` trigger to post the
+On-Call Memory comment (platform lag up to 3 minutes), parses the issue keys out of that
+comment's ADF, and scores them against hand-labelled ground truth in tools/eval-pairs.json.
 
 Auth (same .env as the seeder):
     JIRA_BASE=https://one-atlas-boys.atlassian.net
@@ -239,19 +239,23 @@ def assert_corpus_clean(jira, keys):
 
 
 def create_or_reuse(jira, project, queries, issue_type_id):
-    """Create the query issues (labels oncall-eval). Reuses an existing one by summary."""
+    """Delete the previous fixtures, then create fresh query issues (label oncall-eval).
+
+    Reuse is a trap: the trigger only fires on creation, so a reused issue still carries the
+    comment the PREVIOUS deployment posted — the run would score the old build and report it as
+    the new one. Every measurement therefore starts from new issues.
+    """
     existing = jira.search(
         f'project = "{project}" AND labels = oncall-eval ORDER BY created ASC',
         "summary,status", 200,
     )
-    by_summary = {i["fields"]["summary"]: i["key"] for i in existing}
+    for old in existing:
+        jira.call("DELETE", f"/rest/api/3/issue/{urllib.parse.quote(old['key'])}")
+    if existing:
+        print(f"  - deleted {len(existing)} previous oncall-eval fixture(s)")
+
     out = {}
     for q in queries:
-        key = by_summary.get(q["summary"])
-        if key:
-            print(f"  = {key} reused [{q['id']}] {q['summary']}")
-            out[q["id"]] = key
-            continue
         issue = jira.call("POST", "/rest/api/3/issue", {"fields": {
             "project": {"key": project},
             "issuetype": {"id": issue_type_id},

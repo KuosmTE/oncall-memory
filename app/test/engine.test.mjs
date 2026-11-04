@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { applyJudgement, confidence, contentText, jqlTextClause, judgeMessages, parseJudgement, rankCandidates, rankPeople, toJqlText, tokens, verdict } from "../src/engine.js";
+import { applyJudgement, confidence, contentText, jqlTextClause, judgeMessages, KIND_LABEL, parseJudgement, rankCandidates, rankPeople, receiptText, receiptsText, toJqlText, tokens, verdict } from "../src/engine.js";
 
 // Fixtures mirror the real failure: many issues mention "timeout", three are the same bug.
 const candidates = [
@@ -83,6 +83,69 @@ test("people are ranked by evidence, receipts attached", () => {
 test("a nameless row is never rendered as a person", () => {
   assert.deepEqual(rankPeople([{ person: null, resolved: ["OPS-1"] }]), []);
   assert.deepEqual(rankPeople([{ person: "", resolved: ["OPS-1"] }]), []);
+});
+
+// --- three labelled evidence kinds (P4#2) ---------------------------------------
+// One issue can prove three different things about three different people, and the
+// panel is only honest if it says which thing each receipt proves.
+const ev = (kind, issueKey, date = null) => ({ kind, issueKey, date });
+
+test("one issue can carry all three kinds, each counted once", () => {
+  const [p] = rankPeople([
+    {
+      person: "Anna",
+      evidence: [
+        ev("resolved", "OPS-101", "2026-10-01"),
+        ev("diagnosed", "OPS-101", "2026-09-30"),
+        ev("wrote", "OPS-101", "2026-10-02"),
+        ev("wrote", "OPS-101", "2026-10-02"), // duplicate (person, issue, kind)
+      ],
+    },
+  ]);
+  assert.deepEqual(p.kinds, ["resolved", "diagnosed", "wrote"]);
+  assert.equal(p.evidence.length, 3, "the duplicate receipt is dropped");
+  assert.equal(p.score, 1, "score counts distinct issues, not receipts");
+  assert.deepEqual(p.receipts, ["OPS-101"]);
+});
+
+test("rank is distinct issues first, then number of kinds, then name", () => {
+  const people = rankPeople([
+    { person: "Zoe", evidence: [ev("resolved", "A-1"), ev("resolved", "A-2")] },
+    {
+      person: "Anna",
+      evidence: [ev("resolved", "B-1"), ev("diagnosed", "B-1"), ev("wrote", "B-1"), ev("resolved", "B-2")],
+    },
+    { person: "Mikko", evidence: [ev("resolved", "C-1"), ev("diagnosed", "C-1"), ev("wrote", "C-1")] },
+  ]);
+  assert.deepEqual(people.map((p) => p.person), ["Anna", "Zoe", "Mikko"]);
+  assert.equal(people[0].score, 2);
+  assert.equal(people[2].score, 1);
+});
+
+test("a person known only from a diagnosis is still cited", () => {
+  const people = rankPeople([{ person: "Sanna", evidence: [ev("diagnosed", "OPS-7", "2026-09-01")] }]);
+  assert.equal(people.length, 1, "any evidence kind is a receipt");
+  assert.deepEqual(people[0].kinds, ["diagnosed"]);
+  assert.equal(people[0].lastResolved, null, "no resolution, no resolved date");
+});
+
+test("unknown kinds do not become claims", () => {
+  assert.deepEqual(rankPeople([{ person: "Ghost", evidence: [ev("rumoured", "OPS-1")] }]), []);
+  assert.deepEqual(rankPeople([{ person: "Nobody", evidence: [] }]), []);
+  assert.equal(receiptText({ kind: "rumoured", issueKey: "OPS-1" }), "");
+});
+
+test("receipts print their label, newest first", () => {
+  const [p] = rankPeople([
+    {
+      person: "Anna",
+      evidence: [ev("resolved", "OPS-1", "2026-09-01"), ev("wrote", "OPS-9", "2026-10-30"), ev("diagnosed", "OPS-5")],
+    },
+  ]);
+  assert.equal(p.evidence[0].issueKey, "OPS-9");
+  assert.equal(receiptText(p.evidence[0]), "wrote up — OPS-9");
+  assert.equal(receiptsText(p), "wrote up — OPS-9 · resolved — OPS-1 · diagnosed — OPS-5");
+  assert.equal(KIND_LABEL.wrote, "wrote up", "the panel and the radar comment share one label table");
 });
 
 // --- labels ---------------------------------------------------------------------

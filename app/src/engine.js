@@ -61,19 +61,85 @@ export function rankCandidates(query, candidates, limit = 5) {
 
 /**
  * Rank people by evidence, not by title. Every row carries its receipts.
- * evidence: [{ person, resolved: [issueKey], lastResolved: ISO date }]
- * A name with no citations is dropped: it is a guess, not a receipt.
+ *
+ * Three evidence kinds exist, and each one proves a different thing:
+ *   resolved  — assignee on a matched resolved issue (all we could cite before)
+ *   diagnosed — author of the fix comment we already fetch for lastFix
+ *   wrote     — actor of the resolution transition in the issue changelog (who closed it)
+ *
+ * Input rows: { person, evidence: [{ kind, issueKey, date }] }, or the older
+ * { person, resolved: [key], lastResolved } shape (treated as "resolved" receipts).
+ * Dedupe by (person, issueKey, kind); rank by number of distinct issues, then by how many
+ * kinds the person covers, then by name. A name with no receipt is dropped: it is a guess.
  */
-export function rankPeople(evidence, limit = 3) {
-  return evidence
-    .filter((e) => e.person && (e.resolved || []).length > 0)
-    .map((e) => ({
-      person: e.person,
-      score: e.resolved.length,
-      receipts: e.resolved,
-      lastResolved: e.lastResolved || null,
+export const EVIDENCE_KINDS = ["resolved", "diagnosed", "wrote"];
+export const KIND_LABEL = { resolved: "resolved", diagnosed: "diagnosed", wrote: "wrote up" };
+
+/** One receipt, as the panel and the radar comment both print it: "wrote up — OPS-12". */
+export function receiptText(e) {
+  const label = KIND_LABEL[e?.kind];
+  return label && e?.issueKey ? `${label} — ${e.issueKey}` : "";
+}
+
+/** All of a person's receipts on one line, newest first. */
+export function receiptsText(person) {
+  return (person?.evidence || []).map(receiptText).filter(Boolean).join(" · ");
+}
+
+/** Newest receipt first; receipts without a date go last. Deterministic, so tests can pin it. */
+function byRecency(a, b) {
+  return (
+    String(b.date || "").localeCompare(String(a.date || "")) ||
+    String(a.issueKey).localeCompare(String(b.issueKey)) ||
+    EVIDENCE_KINDS.indexOf(a.kind) - EVIDENCE_KINDS.indexOf(b.kind)
+  );
+}
+
+export function rankPeople(rows, limit = 3) {
+  const people = new Map();
+
+  for (const row of rows || []) {
+    // "unassigned" is a state, not a person, and a nameless row is never a receipt.
+    if (!row?.person || /^unassigned$/i.test(row.person)) continue;
+
+    const events = [...(row.evidence || [])];
+    for (const key of row.resolved || []) {
+      events.push({ kind: "resolved", issueKey: key, date: row.lastResolved || null });
+    }
+
+    for (const e of events) {
+      if (!KIND_LABEL[e?.kind] || !e.issueKey) continue; // a kind we cannot prove is not a claim
+      const p = people.get(row.person) || {
+        person: row.person,
+        seen: new Set(),
+        evidence: [],
+        kinds: new Set(),
+        issues: new Set(),
+        lastResolved: null,
+      };
+      const id = `${e.kind}|${e.issueKey}`;
+      if (p.seen.has(id)) continue;
+      p.seen.add(id);
+      p.evidence.push({ kind: e.kind, issueKey: e.issueKey, date: e.date || null });
+      p.kinds.add(e.kind);
+      p.issues.add(e.issueKey);
+      if (e.kind === "resolved" && e.date && (!p.lastResolved || e.date > p.lastResolved)) {
+        p.lastResolved = e.date;
+      }
+      people.set(row.person, p);
+    }
+  }
+
+  return [...people.values()]
+    .map((p) => ({
+      person: p.person,
+      score: p.issues.size,
+      kinds: EVIDENCE_KINDS.filter((k) => p.kinds.has(k)),
+      receipts: [...p.issues],
+      evidence: p.evidence.slice().sort(byRecency),
+      lastResolved: p.lastResolved,
     }))
-    .sort((a, b) => b.score - a.score || a.person.localeCompare(b.person))
+    .sort((a, b) => b.score - a.score || b.kinds.length - a.kinds.length || a.person.localeCompare(b.person))
     .slice(0, limit);
 }
 

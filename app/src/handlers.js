@@ -15,11 +15,22 @@ import {
   parseJudgement,
   rankCandidates,
   rankPeople,
+  receiptsText,
   toJqlText,
 } from "./engine.js";
 
 // Haiku: cheapest active Forge LLM tier — this is a yes/no with a one-line reason, not reasoning.
 const JUDGE_MODEL = "claude-haiku-4-5-20251001";
+
+// Our own radar comment is not a diagnosis, and the app is not a person: both are recognisable.
+const RADAR_MARKER = "On-Call Memory — this looks like it has happened before";
+
+/** A Jira user is a receipt; an app (including this one) or a customer is not. */
+function isPerson(user) {
+  if (!user?.displayName) return false;
+  if (user.accountType && user.accountType !== "atlassian") return false;
+  return !/^unassigned$/i.test(user.displayName);
+}
 
 /**
  * Ask the model which candidates are really the same problem.
@@ -45,6 +56,7 @@ async function judge(query, items) {
 }
 
 const FIELDS = ["summary", "description", "resolution", "resolutiondate", "assignee", "comment", "status"];
+const MAX_MATCHES = 5; // also caps the per-issue changelog fetches
 const KEY_RE = /^[A-Z][A-Z0-9_]*-[0-9]+$/;
 
 function client(mode) {
@@ -58,14 +70,23 @@ function adfToText(node) {
   return [node.text, ...(node.content || []).map(adfToText)].filter(Boolean).join(" ");
 }
 
-/** The last non-empty comment on a resolved issue is the closest thing to "how it was fixed". */
+/**
+ * The last non-empty comment written by a person is the closest thing to "how it was fixed".
+ * Its author is the second evidence kind: they diagnosed it. This is the same fetch we already
+ * made for `lastFix`, so the extra kind costs no request.
+ */
 function lastFixOf(issue) {
   const comments = issue.fields?.comment?.comments || [];
   for (let i = comments.length - 1; i >= 0; i--) {
     const text = adfToText(comments[i].body).replace(/\s+/g, " ").trim();
-    if (text) return text.length > 240 ? `${text.slice(0, 237)}…` : text;
+    if (!text || text.startsWith(RADAR_MARKER)) continue; // our own comment is not a diagnosis
+    return {
+      text: text.length > 240 ? `${text.slice(0, 237)}…` : text,
+      author: isPerson(comments[i].author) ? comments[i].author.displayName : null,
+      created: comments[i].created || null,
+    };
   }
-  return null;
+  return { text: null, author: null, created: null };
 }
 
 async function search(jql, mode, max = 25) {
@@ -96,17 +117,52 @@ async function issueContext(issueKey, mode) {
 }
 
 function toCandidate(issue) {
+  const fix = lastFixOf(issue);
   return {
     key: issue.key,
     summary: issue.fields?.summary || "",
     description: adfToText(issue.fields?.description),
-    lastFix: lastFixOf(issue),
+    lastFix: fix.text,
+    // Evidence kind 2 — the person who wrote the fix comment down (no extra request).
+    diagnosedBy: fix.author,
+    diagnosedAt: fix.created,
     resolution: issue.fields?.resolution?.name || null,
-    // "assignee at resolution" — we can cite the current assignee, not who clicked Done.
-    resolvedBy: issue.fields?.assignee?.displayName || null,
+    // Evidence kind 1 — "assignee at resolution": who owns it, not who clicked Done.
+    resolvedBy: isPerson(issue.fields?.assignee) ? issue.fields.assignee.displayName : null,
     resolvedAt: issue.fields?.resolutiondate || null,
     status: issue.fields?.status?.name || null,
   };
+}
+
+/**
+ * Evidence kind 3 — who actually closed it, from the issue changelog's resolution transition.
+ * Fetched per matched issue because `expand=changelog` on the search call measured 2.9x the
+ * payload (49 KB → 142 KB for 25 issues); only the ≤5 surviving matches are worth that.
+ * A failure here loses one kind for one issue; it never fails the card.
+ */
+async function closer(issueKey, mode) {
+  try {
+    const res = await client(mode).requestJira(
+      route`/rest/api/3/issue/${issueKey}?expand=changelog&fields=resolution`
+    );
+    if (!res.ok) {
+      console.error(`changelog ${issueKey}: ${res.status}`);
+      return null;
+    }
+    const data = await res.json();
+    let hit = null;
+    for (const h of data?.changelog?.histories || []) {
+      for (const item of h.items || []) {
+        if (item.field !== "resolution") continue;
+        // A cleared resolution means it was reopened: the earlier transition no longer counts.
+        hit = item.toString && isPerson(h.author) ? { actor: h.author.displayName, date: h.created || null } : null;
+      }
+    }
+    return hit;
+  } catch (e) {
+    console.error(`changelog ${issueKey}: ${e.message}`);
+    return null;
+  }
 }
 
 /**
@@ -133,15 +189,23 @@ export async function buildCard({ issueKey, text } = {}, mode = "user") {
 
   const issues = await search(jql, mode);
   // Judge BEFORE people: a person is only cited for an issue the judge confirmed is the same problem.
-  const items = await judge(query, rankCandidates(words, issues.map(toCandidate), 5));
+  const ranked = await judge(query, rankCandidates(words, issues.map(toCandidate), MAX_MATCHES));
+  // Who closed each match (evidence kind 3). Only the surviving matches, in parallel, ≤5 requests.
+  const closers = await Promise.all(ranked.map((m) => closer(m.key, mode)));
+  const items = ranked.map((m, i) => ({ ...m, wroteBy: closers[i]?.actor || null, wroteAt: closers[i]?.date || null }));
 
+  // One row per person, one receipt per (kind, issue). A kind we cannot prove is simply absent.
+  const add = (rows, person, kind, issueKey, date) => {
+    if (!person || !issueKey) return;
+    const row = rows.get(person) || { person, evidence: [] };
+    row.evidence.push({ kind, issueKey, date: date || null });
+    rows.set(person, row);
+  };
   const byPerson = new Map();
   for (const m of items) {
-    if (!m.resolvedBy) continue; // "unassigned" is not a person
-    const row = byPerson.get(m.resolvedBy) || { person: m.resolvedBy, resolved: [], lastResolved: null };
-    row.resolved.push(m.key);
-    if (m.resolvedAt && (!row.lastResolved || m.resolvedAt > row.lastResolved)) row.lastResolved = m.resolvedAt;
-    byPerson.set(m.resolvedBy, row);
+    add(byPerson, m.resolvedBy, "resolved", m.key, m.resolvedAt);
+    add(byPerson, m.diagnosedBy, "diagnosed", m.key, m.diagnosedAt);
+    add(byPerson, m.wroteBy, "wrote", m.key, m.wroteAt);
   }
 
   return {
@@ -166,7 +230,7 @@ export async function memoryCard(payload) {
   return { items: card.items, confidence: card.confidence, note: card.note };
 }
 
-/** ADF for the radar comment: the fixes, the fix line, and who did them. */
+/** ADF for the radar comment: the fixes, who owns / closed them, and who to ask (with labels). */
 function commentBody(card) {
   const bullets = card.items.slice(0, 3).map((i) => ({
     type: "listItem",
@@ -174,13 +238,13 @@ function commentBody(card) {
       type: "paragraph",
       content: [{
         type: "text",
-        text: `${i.key} — ${i.summary}${i.why ? ` — ${i.why}` : ""}${i.resolvedBy ? ` — fixed by ${i.resolvedBy}` : ""}${i.lastFix ? `: ${i.lastFix}` : ""}`,
+        text: `${i.key} — ${i.summary}${i.why ? ` — ${i.why}` : ""}${i.resolvedBy ? ` — assignee ${i.resolvedBy}` : ""}${i.wroteBy && i.wroteBy !== i.resolvedBy ? ` — closed by ${i.wroteBy}` : ""}${i.lastFix ? `: ${i.lastFix}` : ""}`,
       }],
     }],
   }));
 
   const people = card.people.length
-    ? [`Ask: ${card.people.map((p) => `${p.person} (${p.receipts.join(", ")})`).join(" · ")}`]
+    ? [`Ask: ${card.people.map((p) => `${p.person} (${receiptsText(p)})`).join(" · ")}`]
     : [];
 
   return {
