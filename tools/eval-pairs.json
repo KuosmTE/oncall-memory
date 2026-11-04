@@ -1,0 +1,112 @@
+{
+  "version": 1,
+  "project": "MOBL",
+  "corpus_manifest": "seed-manifest.json",
+  "created": "2026-11-04",
+  "note": "Ground truth for the live radar eval. Queries are hand-written the way a reporter would type them, never copied from a seeded summary. `expected` holds real Jira keys of the seeded corpus issues that describe the SAME failure as the query (near-miss and unrelated seeds are deliberately absent). A pair counts as a hit when any expected key appears in the radar comment's top-3. Controls must produce no radar comment at all.",
+  "pairs": [
+    {
+      "id": "redis-peak",
+      "family": "redis-pool",
+      "summary": "Checkout falls over at peak again",
+      "description": "Every evening around seven the payment page hangs for about a minute; the connection pool looks saturated again.",
+      "expected": ["MOBL-58", "MOBL-59", "MOBL-60", "MOBL-61"],
+      "why": "Pool exhaustion under load: same failure as the checkout latency/timeout seeds."
+    },
+    {
+      "id": "redis-504",
+      "family": "redis-pool",
+      "summary": "Customers see 504s when traffic is high",
+      "description": "The gateway returns 504 for a slice of calls during the sale; the payment step is the worst hit.",
+      "expected": ["MOBL-62", "MOBL-58", "MOBL-59"],
+      "why": "Gateway timeouts caused by the same saturated backend."
+    },
+    {
+      "id": "redis-queue",
+      "family": "redis-pool",
+      "summary": "Cart requests queue up at rush hour",
+      "description": "Nothing errors, everything is just slow: orders wait in line behind a saturated backend and the cart page spins.",
+      "expected": ["MOBL-60", "MOBL-61", "MOBL-58"],
+      "why": "Queueing/db-connection saturation, no explicit error code."
+    },
+    {
+      "id": "deploy-5xx",
+      "family": "bad-deploy",
+      "summary": "Payment errors started right after today's release",
+      "description": "5xx on the charge endpoint jumped within minutes of the new version going live; about one payment in ten fails.",
+      "expected": ["MOBL-70", "MOBL-71", "MOBL-74"],
+      "why": "Bad release regression on the payment path."
+    },
+    {
+      "id": "deploy-dupes",
+      "family": "bad-deploy",
+      "summary": "Customers got charged twice for one order",
+      "description": "Duplicate charges reported since last night's build shipped; support is fielding refunds.",
+      "expected": ["MOBL-73", "MOBL-70", "MOBL-71"],
+      "why": "Same post-release regression, visible as duplicate charges."
+    },
+    {
+      "id": "deploy-rollback",
+      "family": "bad-deploy",
+      "summary": "We rolled the release back, checkout was broken",
+      "description": "The morning build broke the checkout submit path; rollback fixed it within minutes. Has this happened before?",
+      "expected": ["MOBL-74", "MOBL-70", "MOBL-71"],
+      "why": "Rollback of a broken build; the deploy seeds name the same regression."
+    },
+    {
+      "id": "disk-full",
+      "family": "disk-full",
+      "summary": "Database server is out of space",
+      "description": "Writes are failing on prod-db-2 and df shows the data partition at 100%.",
+      "expected": ["MOBL-76", "MOBL-77", "MOBL-80", "MOBL-78"],
+      "why": "Disk exhausted on the database host."
+    },
+    {
+      "id": "disk-logs",
+      "family": "disk-full",
+      "summary": "A log file grew until the node filled up",
+      "description": "Debug logging was left on and ate 90 GB; the server ran out of room and services degraded.",
+      "expected": ["MOBL-79", "MOBL-76", "MOBL-77"],
+      "why": "Log-driven disk exhaustion; same failure, different cause."
+    },
+    {
+      "id": "auth-401",
+      "family": "auth-token",
+      "summary": "Integration calls rejected with 401 this morning",
+      "description": "All our API requests come back 401 Unauthorized; the access token is past its expiry date.",
+      "expected": ["MOBL-82", "MOBL-83", "MOBL-84"],
+      "why": "Expired credential causing 401s on integration jobs."
+    },
+    {
+      "id": "auth-sync",
+      "family": "auth-token",
+      "summary": "Nightly sync has not run since the credential lapsed",
+      "description": "No records since last week; the refresh token expired and the job fails on its first call.",
+      "expected": ["MOBL-86", "MOBL-84", "MOBL-85"],
+      "why": "Refresh token expiry stopping a scheduled job."
+    }
+  ],
+  "controls": [
+    {
+      "id": "ctrl-icon",
+      "summary": "App icon looks blurry on the iPad launcher",
+      "description": "The launcher icon renders soft at 2x; design wants it crisp on the home grid.",
+      "expected": [],
+      "why": "Cosmetic UI issue, no operational failure family."
+    },
+    {
+      "id": "ctrl-a11y",
+      "summary": "Accessibility audit flags missing alt text on the settings page",
+      "description": "Automated audit reports unlabelled images in the settings tab.",
+      "expected": [],
+      "why": "Compliance/UI debt, unrelated to any seeded incident."
+    },
+    {
+      "id": "ctrl-retro",
+      "summary": "Weekly retro notes are missing from Confluence",
+      "description": "Last week's retro page never got created; the team cannot find the notes.",
+      "expected": [],
+      "why": "Documentation chore, not an incident."
+    }
+  ]
+}

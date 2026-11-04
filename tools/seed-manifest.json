@@ -1,0 +1,168 @@
+{
+  "project": "MOBL",
+  "generated": "2026-11-04T08:36:33+00:00",
+  "corpus": {
+    "redis-same-1": {
+      "key": "MOBL-58",
+      "family": "redis-pool",
+      "kind": "similar",
+      "summary": "Checkout latency spike after deploy"
+    },
+    "redis-same-2": {
+      "key": "MOBL-59",
+      "family": "redis-pool",
+      "kind": "similar",
+      "summary": "Checkout timeouts during evening peak"
+    },
+    "redis-para-1": {
+      "key": "MOBL-60",
+      "family": "redis-pool",
+      "kind": "paraphrase",
+      "summary": "Orders hang at rush hour, cart requests queue up"
+    },
+    "redis-para-2": {
+      "key": "MOBL-61",
+      "family": "redis-pool",
+      "kind": "paraphrase",
+      "summary": "Web tier saturating on database connections during sales"
+    },
+    "redis-para-3": {
+      "key": "MOBL-62",
+      "family": "redis-pool",
+      "kind": "paraphrase",
+      "summary": "Intermittent 504s on the payment step under load"
+    },
+    "redis-near": {
+      "key": "MOBL-63",
+      "family": "redis-pool",
+      "kind": "near-miss",
+      "summary": "Redis cache evictions after memory bump"
+    },
+    "deploy-same-1": {
+      "key": "MOBL-70",
+      "family": "bad-deploy",
+      "kind": "similar",
+      "summary": "Payment 5xx rate spikes right after release 4.18.0"
+    },
+    "deploy-same-2": {
+      "key": "MOBL-71",
+      "family": "bad-deploy",
+      "kind": "similar",
+      "summary": "Elevated payment errors after the 4.18.0 deploy"
+    },
+    "deploy-para-1": {
+      "key": "MOBL-72",
+      "family": "bad-deploy",
+      "kind": "paraphrase",
+      "summary": "Order confirmations stopped arriving after last night's rollout"
+    },
+    "deploy-para-2": {
+      "key": "MOBL-73",
+      "family": "bad-deploy",
+      "kind": "paraphrase",
+      "summary": "Customers charged twice after the Thursday release"
+    },
+    "deploy-para-3": {
+      "key": "MOBL-74",
+      "family": "bad-deploy",
+      "kind": "paraphrase",
+      "summary": "Had to roll back this morning's build, checkout was broken"
+    },
+    "deploy-near": {
+      "key": "MOBL-75",
+      "family": "bad-deploy",
+      "kind": "near-miss",
+      "summary": "Release pipeline waiting on manual approval for hours"
+    },
+    "disk-same-1": {
+      "key": "MOBL-76",
+      "family": "disk-full",
+      "kind": "similar",
+      "summary": "Disk full on prod-db-2"
+    },
+    "disk-same-2": {
+      "key": "MOBL-77",
+      "family": "disk-full",
+      "kind": "similar",
+      "summary": "No space left on device on the primary database host"
+    },
+    "disk-para-1": {
+      "key": "MOBL-78",
+      "family": "disk-full",
+      "kind": "paraphrase",
+      "summary": "Postgres refusing writes because the volume ran out of room"
+    },
+    "disk-para-2": {
+      "key": "MOBL-79",
+      "family": "disk-full",
+      "kind": "paraphrase",
+      "summary": "Log rotation filled the server disk overnight"
+    },
+    "disk-para-3": {
+      "key": "MOBL-80",
+      "family": "disk-full",
+      "kind": "paraphrase",
+      "summary": "Database host unresponsive, df shows 100% on the data partition"
+    },
+    "disk-near": {
+      "key": "MOBL-81",
+      "family": "disk-full",
+      "kind": "near-miss",
+      "summary": "High disk latency on the SSD data volume"
+    },
+    "auth-same-1": {
+      "key": "MOBL-82",
+      "family": "auth-token",
+      "kind": "similar",
+      "summary": "API calls failing with 401 after the access token expired"
+    },
+    "auth-same-2": {
+      "key": "MOBL-83",
+      "family": "auth-token",
+      "kind": "similar",
+      "summary": "Expired OAuth token causes 401s on the sync jobs"
+    },
+    "auth-para-1": {
+      "key": "MOBL-84",
+      "family": "auth-token",
+      "kind": "paraphrase",
+      "summary": "Nightly export dies because the credentials are past their expiry"
+    },
+    "auth-para-2": {
+      "key": "MOBL-85",
+      "family": "auth-token",
+      "kind": "paraphrase",
+      "summary": "Partner integration rejects our requests, says the token is no longer valid"
+    },
+    "auth-para-3": {
+      "key": "MOBL-86",
+      "family": "auth-token",
+      "kind": "paraphrase",
+      "summary": "Scheduled sync stopped ever since the refresh token lapsed"
+    },
+    "auth-near": {
+      "key": "MOBL-87",
+      "family": "auth-token",
+      "kind": "near-miss",
+      "summary": "Users locked out after too many MFA attempts"
+    },
+    "control-printer": {
+      "key": "MOBL-64",
+      "family": "unrelated",
+      "kind": "control",
+      "summary": "Printer on 3rd floor offline"
+    },
+    "control-display": {
+      "key": "MOBL-88",
+      "family": "unrelated",
+      "kind": "control",
+      "summary": "Conference room display flickers during video calls"
+    },
+    "control-laptop": {
+      "key": "MOBL-89",
+      "family": "unrelated",
+      "kind": "control",
+      "summary": "New starter laptop not enrolled in MDM"
+    }
+  }
+}

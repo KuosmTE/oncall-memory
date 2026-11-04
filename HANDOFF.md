@@ -69,6 +69,7 @@ Entry log line in `onIssueCreated` means "no comment" can be told apart from "ne
 4. **Teamwork Graph is CUT (Teemu, 2026-11-04)** — EAP plus an Atlassian support allowlist is external latency, not a task. Marketplace listing also not claimed.
 5. **One app, one engine, two front doors** (panel + trigger). "Safe Hands" bulk ops stay out — see SPEC §12 for why.
 6. **LLM judge is live (P4, 2026-11-04, v4.1.0).** Forge LLMs API, `claude-haiku-4-5-20251001`, top-5 only, JSON verdicts. Billing is on the Developer Space (no free tier, ~1c per issue). **No cache** — deliberate: a cache is a failure mode of its own at demo volume. Any parse/API failure falls back to token ranking, never to silence. `llm` module = major version; install upgrade needed admin approval.
+7. **The demo project is `MOBL` (Atlassian sample "Mobile Dev"), not `OCD`** — Teemu's clean private space stays clean for the fresh-install/incognito test. MOBL already has 53 sample issues spanning 2021→2026 and 6 sample people, so the 0:00 pain shot and the 0:40 panel shot share one realistic stage; OCD has one assignable user, which would reduce "who knows" to a single name. Seeded issues carry `labels=oncall-seed` and are deletable in one JQL.
 
 ## Gotchas that cost real time
 
