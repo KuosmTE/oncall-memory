@@ -27,14 +27,17 @@ import urllib.parse
 import urllib.request
 from pathlib import Path
 
+# Deliberately NOT all in the same vocabulary: the recall number is only useful if it can
+# disappoint us. Labels are written onto the issues so the demo and the eyeball test agree.
 INCIDENTS = [
-    ("Checkout latency spike after deploy", "p99 goes to 8s. Redis pool exhausted, connections queueing."),
-    ("Checkout timeouts during evening peak", "Same redis connection pool exhaustion as the spring incident. Timeouts at 30s."),
-    ("Order service cannot reach redis", "Connect timeout to redis, pool size too small under peak load."),
-    ("Redis connection pool exhausted in checkout path", "Pool limit hit repeatedly; requests queue and time out."),
-    ("Intermittent checkout failures under load", "Redis pool exhaustion, timeouts, cart recovery jobs pile up."),
+    ("Checkout latency spike after deploy", "p99 goes to 8s. Redis pool exhausted, connections queueing.", "similar"),
+    ("Checkout timeouts during evening peak", "Same redis connection pool exhaustion as the spring incident.", "similar"),
+    ("Orders hang at rush hour, cart requests queue up", "Requests wait in line behind a saturated backend; cart screen spins.", "paraphrase"),
+    ("Web tier saturating on database connections during sales", "Connection ceiling reached under load, requests queue and time out.", "paraphrase"),
+    ("Intermittent 504s on the payment step under load", "Gateway returns 504 for a slice of payment calls when traffic peaks.", "paraphrase"),
 ]
-CONTROL = ("Printer on 3rd floor offline", "Toner replaced, still no network. Unrelated to checkout.")
+NEAR_MISS = ("Redis cache evictions after memory bump", "Eviction rate up after the instance resize; values vanish early.", "near-miss")
+CONTROL = ("Printer on 3rd floor offline", "Toner replaced, still no network. Unrelated to checkout.", "control")
 
 
 def load_env(path=Path(__file__).resolve().parent.parent / ".env"):
@@ -124,15 +127,15 @@ def main():
     print(f"as        {me.get('displayName')} <{me.get('emailAddress')}>")
     print(f"project   {project['key']} ({project['name']})  type={type_name}  assignees={len(accounts)}")
 
-    plan = [("incident", s, d) for s, d in INCIDENTS] + [("control", *CONTROL)]
+    plan = list(INCIDENTS) + [NEAR_MISS, CONTROL]
     if args.dry_run:
-        for kind, summary, desc in plan:
+        for summary, desc, kind in plan:
             print(f"  would create [{kind}] {summary}")
         print("\ndry run — nothing created")
         return 0
 
     created = []
-    for i, (kind, summary, desc) in enumerate(plan):
+    for i, (summary, desc, kind) in enumerate(plan):
         issue = jira.call(
             "POST",
             "/rest/api/3/issue",
@@ -142,6 +145,7 @@ def main():
                     "issuetype": {"id": type_id},
                     "summary": summary,
                     "description": adf(desc),
+                    "labels": ["oncall-seed", kind],
                 }
             },
         )
