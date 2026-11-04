@@ -145,6 +145,9 @@ capability lacks. Defensible differences, in order of how much they matter on ca
    get the same memory mid-fix.
 4. **Deterministic.** Fixed queries, fixed ranking, 30-min cache — same answer twice.
 
-Positioning sentence for the submission and the video: **"Your skill matrix records what
-people claim. On-Call Memory shows what they actually did — with receipts."**
+Positioning sentence (safe version, until evidence types are broadened):
+**"Your skill matrix records what people claim. On-Call Memory cites who was there when it
+was fixed — with the issue keys to prove it."**
+
+Do not write "what they actually did" while the only evidence is *assignee at resolution*.
 

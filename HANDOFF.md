@@ -11,9 +11,10 @@ Read this first in a fresh session. Then `SPEC.md` (product) and `DEMO.md` (film
 | App id | `ari:cloud:ecosystem::app/d0c1b623-3512-4219-8760-0b15e2bd80b2` |
 | Developer Space | Minttu Labs (account: teemu.kuosm@gmail.com) |
 | Live site | `https://one-atlas-boys.atlassian.net` (Forge demo site, ~90 days) |
-| Deployed | `development`, version **2.1.0**, **installed in Jira** on the demo site |
+| Deployed | `development`, version **3.0.0**, **installed in Jira** on the demo site |
 | Credentials | `/opt/workspace/codegeist/.env` (`FORGE_EMAIL`, `FORGE_API_TOKEN`, chmod 600) |
 | Deadline | **2026-12-22 22:00 EET** (Devpost submission) |
+| Milestones | P3 data+eval **Nov 14** · P4 LLM judge+evidence **Nov 28** · P5 agent filmed **Dec 8 (hard gate)** · video cut **Dec 15** · submit **Dec 20** |
 
 ## Commands (the only ones that matter)
 
@@ -24,20 +25,20 @@ npm test                      # 13 engine tests, no network
 npm run check                 # test + forge lint (the validator script was deleted: no PyYAML on this box)
 npm run build:panel           # esbuild the Custom UI bundle → src/frontend/panel/app.js
 npx forge lint                # must say "No issues found"
-npm run forge:deploy        # builds the panel bundle first — never call forge deploy bare
+npm run forge:deploy          # builds the panel bundle first — never call forge deploy bare
 npx forge install --demo-site --product Jira -e development --non-interactive --confirm-scopes --upgrade
 ```
 
 ## Architecture
 
 ```
-app/manifest.yml                  panel + 4 functions + 2 actions + rovo:mcp + trigger + scopes
+app/manifest.yml                  panel + 4 functions + 2 actions + 2 MCP tools + trigger + scopes
 app/src/engine.js                 PURE ranking (rankCandidates, rankPeople) — all logic lives here
 app/src/handlers.js               Jira I/O: search, issue context, comment (the only write)
 app/src/resolvers.js              panel resolver → plain props
 app/src/frontend/panel/           Custom UI: index.html + src/main.js → app.js (esbuild IIFE)
 app/test/engine.test.mjs          node:test, no deps
-app/validate-manifest.py          pre-deploy checker (handlers resolve under src/)
+(no separate manifest validator — `npm run check` covers it; forge lint checks handlers)
 ```
 
 ## Review round 1 (architect, t_6db62490) — fixed in v3.0.0
@@ -94,3 +95,31 @@ Create one throwaway issue on the demo site, then `forge logs -f radar-fn -s 5m`
 
 - Should the demo project be seeded with a fictional team + tickets he is happy to show judges?
 - Marketplace listing: chase it (needs partner agreement + review) or skip and enter only the main + agent/MCP/TWG tracks?
+
+## MCP: what "zero config" actually costs (verified 2026-11-04)
+
+External MCP exposure is **off by default per app**. Before the 2:30 demo beat:
+
+1. Atlassian Administration → **Apps → Sites → one-atlas-boys → Connected apps**
+2. Select On-Call Memory → **Tools** → enable the two tools
+3. In the client: `claude mcp add --transport http oncall https://mcp.atlassian.com/forge/d0c1b623-3512-4219-8760-0b15e2bd80b2`
+4. Connect → OAuth consent → pick the site → approve
+
+Never call the app "zero config" in copy. Say "one admin toggle, then any MCP client".
+
+## Devpost submission artifact — write this before the video, not after
+
+- [ ] Tagline (one sentence, ≤140 chars) — must not claim AI judging until P4 lands
+- [ ] Long description: problem → product → receipts rule → how the tech requirement is met
+- [ ] Category: **Apps for Software Teams**
+- [ ] Bonus tracks claimed: MCP (yes) · Agents (only if the agent is filmed) · TWG (**cut**, EAP + allowlist) · Marketplace (**not claimed**)
+- [ ] Video URL (public YouTube, ≤5 min, front-load 2:50)
+- [ ] Install/access link, tested in a fresh incognito browser as a non-owner
+- [ ] Repo URL (make `KuosmTE/oncall-memory` public or grant access)
+- [ ] Fresh-site checklist: install → open issue → panel shows output → create issue → radar comment arrives
+
+## Open decisions (owner: Teemu)
+
+1. **Jira API token** in `.env` — blocks all seed data and therefore every measurement.
+2. **Teamwork Graph**: EAP + Atlassian support allowlist. Either send the request now (10 min) or drop the track. Default if silent: drop.
+3. **Forge LLM billing** — no free tier; the judge improvement assumes we accept cents-level billing.

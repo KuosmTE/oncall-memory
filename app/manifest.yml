@@ -1,6 +1,6 @@
-# On-Call Memory — Forge manifest (v0, backend only).
-# The panel lands in P2 with the `forge create` UI Kit toolchain, so its resource path
-# is not invented here. Validate before every deploy:  ./validate-manifest.py
+# On-Call Memory — Forge manifest.
+# Panel = Custom UI (plain DOM + esbuild bundle), NOT UI Kit: see HANDOFF decision 1.
+# Check before every deploy:  npm run check   (npm test && forge lint)
 app:
   id: ari:cloud:ecosystem::app/d0c1b623-3512-4219-8760-0b15e2bd80b2
   runtime:

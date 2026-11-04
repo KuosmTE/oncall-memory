@@ -15,13 +15,19 @@ Total raw footage by submission time: ~5 minutes. Final cut: **2:40–2:55**.
 
 | Time | Shot | Must be visible |
 |---|---|---|
-| 0:00 | The pain | A Jira search returning dozens of near-identical issues; no name, no answer |
+| 0:00 | The pain | A Jira search over ONE realistic project (~40–60 issues, 6–8 people, ~18 months) returning many near-identical issues; no name, no answer |
 | 0:20 | The panel | Issue opened, panel loads "Ask these three" — a name, a claim, a date |
 | 0:40 | The receipt | Click one person → the exact issue that proves it |
 | 1:10 | The radar | New ticket created → comment arrives with the previous fix |
 | 1:50 | The agent | Rovo chat: "who should I ask about PROJ-123" → it calls our tool and cites keys |
-| 2:30 | Outside Atlassian | Terminal: same question from Claude Code/Hermes over MCP |
-| 2:50 | The line | "Read-only. Zero config. Install link below." |
+| 2:30 | Outside Atlassian | Terminal: same question from Claude Code/Hermes over MCP — **show the admin toggle first** (one cut, 3s), never say "zero config" |
+| 2:50 | The line | "Read-only except one comment. One admin toggle. Install link in the description." |
+
+## Shot continuity
+
+The 0:00 pain shot and the 0:40 panel shot must be **the same project**. Five seeded
+tickets in one shot and the same five in the next reads as staged. Seed once, film both
+from that one project.
 
 ## Hard constraints
 
