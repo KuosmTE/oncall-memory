@@ -97,9 +97,12 @@ Entry log line in `onIssueCreated` means "no comment" can be told apart from "ne
    resolved matches in this project". Citations checked against Jira REST: MOBL-74 Done/Cassi,
    MOBL-71 Done/Max, MOBL-70 Done/Ryan Lee — no invented names or keys. **Rovo is entitled on the
    demo site** (Ask Rovo / Open Rovo Chat are in the Jira top bar), so the risk is gone.
-   What is still missing is the *screen capture* for the submission; the pane is only driveable
-   while the desktop app is frontmost, so recording it is a human step. Gate unchanged: filmed
-   by **2026-12-08** or the modules get deleted.
+   What was still missing — the *screen capture* — now exists: Teemu recorded it 2026-11-05
+   (`/opt/data/Videos/oncall-raw/raw-P5-agent.webm`, converted to `raw-P5-agent.mp4`, plus a
+   30 s `raw-P5-agent-answer.mp4` cut from 1:24). The clip shows the question, "Invoking tool:
+   Read Skills for agents", then the answer with MOBL-70/71/74. Caveats: Rovo's "Try Rovo on
+   your phone" promo card covers part of the last line, and the capture is 1920×1034 (not 16:9),
+   so the final cut needs a 1080p canvas. Gate unchanged: filmed by **2026-12-08** — met.
    Demo-quality note: the seeder closed every issue through the API token, so the `wrote` kind
    points at Teemu on all seeded issues and he outranks the sample team — accurate, weak on
    camera. Re-attributing the resolution transitions in `tools/seed-incidents.py` is the fix if
@@ -173,8 +176,8 @@ radar print `resolved` / `diagnosed` / `wrote up` per receipt (SPEC §7, HANDOFF
 at the latest version (no scope change). Verified in a logged-in Rovo chat: the agent appears in
 the agent switcher and answers "Who should I ask about MOBL-122?" with Teemu Kuosmanen /
 Cassi Owens / Max Taylor plus MOBL-70, 71, 74 — every citation matches Jira (decision 9).
-Remaining: a screen recording of that answer for the video (human step). **Gate: filmed by
-2026-12-08 or the modules get deleted.**
+Remaining: the answer is recorded (`~/Videos/oncall-raw/raw-P5-agent.mp4`, 30 s cut
+`raw-P5-agent-answer.mp4`) — P5 is closed. **Gate met: filmed before 2026-12-08.**
 **P6 — video, listing decision, Devpost form**
 
 ## Open questions for Teemu
