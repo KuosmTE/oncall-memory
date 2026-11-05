@@ -11,7 +11,7 @@ Read this first in a fresh session. Then `SPEC.md` (product) and `DEMO.md` (film
 | App id | `ari:cloud:ecosystem::app/d0c1b623-3512-4219-8760-0b15e2bd80b2` |
 | Developer Space | Minttu Labs (account: teemu.kuosm@gmail.com) |
 | Live site | `https://one-atlas-boys.atlassian.net` (Forge demo site, ~90 days) |
-| Deployed | `development`, version **4.2.0**, **installed in Jira** on the demo site |
+| Deployed | `development`, version **4.3.0**, **installed in Jira** on the demo site |
 | Credentials | `/opt/workspace/codegeist/.env` (`FORGE_EMAIL`, `FORGE_API_TOKEN`, chmod 600) |
 | Deadline | **2026-12-22 22:00 EET** (Devpost submission) |
 | Milestones | P3 data+eval **Nov 14** · P4 LLM judge+evidence **Nov 28** · P5 agent filmed **Dec 8 (hard gate)** · video cut **Dec 15** · submit **Dec 20** |
@@ -21,7 +21,7 @@ Read this first in a fresh session. Then `SPEC.md` (product) and `DEMO.md` (film
 ```bash
 cd /opt/workspace/codegeist && set -a && . ./.env && set +a   # auth, no keychain, no forge login
 cd app
-npm test                      # 23 engine tests, no network
+npm test                      # 26 tests, no network (24 engine + 2 card-path)
 npm run check                 # test + forge lint (the validator script was deleted: no PyYAML on this box)
 npm run build:panel           # esbuild the Custom UI bundle → src/frontend/panel/app.js
 npx forge lint                # must say "No issues found"
@@ -38,7 +38,8 @@ app/src/engine.js                 PURE ranking (rankCandidates, rankPeople) — 
 app/src/handlers.js               Jira I/O: search, issue context, comment (the only write)
 app/src/resolvers.js              panel resolver → plain props
 app/src/frontend/panel/           Custom UI: index.html + src/main.js → app.js (esbuild IIFE)
-app/test/engine.test.mjs          node:test, no deps
+app/test/engine.test.mjs          node:test, no deps — pure ranking
+app/test/handlers.test.mjs        node:test + test/fixtures/ — buildCard against canned Jira JSON
 (no separate manifest validator — `npm run check` covers it; forge lint checks handlers)
 ```
 
@@ -102,6 +103,14 @@ Entry log line in `onIssueCreated` means "no comment" can be told apart from "ne
 - `tools/eval-recall.py` now **deletes and recreates** the `oncall-eval` fixtures. Reusing them
   silently scored the previous deployment: the trigger only fires on create, so a reused issue
   still carries the old comment and the run reports the old build's number.
+- `npm test` used to import only `engine.js`, so v4.3.0 shipped `resultNote is not defined`
+  (the empty-state fix added the function, the import was dropped) with **24 tests green and a
+  dead panel** — the probe found it, not the suite. `test/handlers.test.mjs` now calls `buildCard`
+  with canned Jira JSON through a fixture `@forge/api`; any "used but not imported" or card-shape
+  break fails there. Keep a test that actually imports the I/O file.
+- A workspace-cleanup cron can `git add`/commit in-progress edits in this repo under a
+  `chore: workspace cleanup sync` message. Check `git log` before assuming your diff is uncommitted;
+  don't rewrite pushed history over the message, follow up with the real one.
 - The seeded corpus had no comments at all, so `diagnosed` could not appear anywhere. Run
   `tools/seed-fix-comments.py` after `seed-incidents.py`; both are idempotent.
 
