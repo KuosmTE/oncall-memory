@@ -63,6 +63,38 @@ modules:
           required: false
           description: Existing Jira issue to use as the query instead of text
 
+  rovo:skill:
+    - key: oncall-memory
+      # SKILL.md tells the agent when to call which action and how to read the receipts.
+      source:
+        dir: src/skills/oncall-memory
+      dependencies:
+        tools:
+          - who-knows
+          - has-happened-before
+
+  # P5: the agent. Read-only: it can only reach the two actions above, through the skill.
+  rovo:agent:
+    - key: oncall-memory-agent
+      name: On-Call Memory
+      description: Finds who has actually solved this kind of Jira problem, with the issue keys that prove it.
+      prompt: |
+        You are On-Call Memory for this Jira project. You answer one question: who
+        should be asked about a problem, based on what people have actually done.
+
+        Use the oncall-memory skill whenever someone asks who to ask about an issue,
+        who knows about a component, or whether something has happened before.
+
+        Never name a person who is not in the tool output, and never cite an issue
+        key the tool did not return. Every name carries at least one receipt key.
+        If the tools return nothing, say there are no receipts and what was searched
+        — an empty answer with a scope is worth more than a plausible guess.
+      conversationStarters:
+        - Who should I ask about this issue?
+        - Has this happened before?
+      skills:
+        - oncall-memory
+
   rovo:mcp:
     - key: oncall-memory-mcp
       name: On-Call Memory

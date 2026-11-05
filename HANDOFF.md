@@ -11,7 +11,7 @@ Read this first in a fresh session. Then `SPEC.md` (product) and `DEMO.md` (film
 | App id | `ari:cloud:ecosystem::app/d0c1b623-3512-4219-8760-0b15e2bd80b2` |
 | Developer Space | Minttu Labs (account: teemu.kuosm@gmail.com) |
 | Live site | `https://one-atlas-boys.atlassian.net` (Forge demo site, ~90 days) |
-| Deployed | `development`, version **4.3.0**, **installed in Jira** on the demo site |
+| Deployed | `development`, version **4.4.0**, **installed in Jira** on the demo site |
 | Credentials | `/opt/workspace/codegeist/.env` (`FORGE_EMAIL`, `FORGE_API_TOKEN`, chmod 600) |
 | Deadline | **2026-12-22 22:00 EET** (Devpost submission) |
 | Milestones | P3 data+eval **Nov 14** · P4 LLM judge+evidence **Nov 28** · P5 agent filmed **Dec 8 (hard gate)** · video cut **Dec 15** · submit **Dec 20** |
@@ -34,6 +34,8 @@ cd .. && node tools/panel-probe.mjs MOBL-69   # the panel's resolver JSON, witho
 
 ```
 app/manifest.yml                  panel + 4 functions + 2 actions + 2 MCP tools + trigger + scopes
+                                  + rovo:agent `oncall-memory-agent` + rovo:skill `oncall-memory`
+app/src/skills/oncall-memory/      SKILL.md — when to call which action, how to read receipts
 app/src/engine.js                 PURE ranking (rankCandidates, rankPeople) — all logic lives here
 app/src/handlers.js               Jira I/O: search, issue context, comment (the only write)
 app/src/resolvers.js              panel resolver → plain props
@@ -80,6 +82,18 @@ Entry log line in `onIssueCreated` means "no comment" can be told apart from "ne
    by (person, issue, kind), ranks by distinct issues then kind count, and still drops any name
    with no receipt. No Confluence scope, no `read:graph:*`. `tools/seed-fix-comments.py` adds the
    in-family fix comments the `diagnosed` kind needs (the seeded corpus had none).
+9. **P5 agent + skill are manifest-only and read-only (v4.4.0).** `rovo:skill` `oncall-memory`
+   packages `src/skills/oncall-memory/SKILL.md` and declares `dependencies.tools: [who-knows,
+   has-happened-before]` — the two existing action keys, so the agent reaches them through the
+   skill and nothing in the manifest grants a wider surface. `rovo:agent` `oncall-memory-agent`
+   lists only `skills: [oncall-memory]`, matching Atlassian's own skill example; if the agent
+   turns out unable to invoke the actions, adding `actions:` to the agent is the fallback. No new
+   scopes, so the install upgrade needed no admin re-consent. The prompt stays inline (CLI 15 ≥
+   10.6 would allow a resource path; at six lines a file would be noise).
+   **Not proven at runtime:** there is no capture of the agent answering with a MOBL key yet.
+   That needs a logged-in Rovo session on the demo site, and Rovo entitlement on a Forge demo
+   site is unverified (Free plans do not include Rovo). If no capture exists by **2026-12-08**,
+   delete both modules — that is the standing gate.
 
 ## Gotchas that cost real time
 
@@ -111,6 +125,13 @@ Entry log line in `onIssueCreated` means "no comment" can be told apart from "ne
 - A workspace-cleanup cron can `git add`/commit in-progress edits in this repo under a
   `chore: workspace cleanup sync` message. Check `git log` before assuming your diff is uncommitted;
   don't rewrite pushed history over the message, follow up with the real one.
+- `forge install --upgrade` can answer **"Site is already at the latest version"** right after a
+  successful deploy. That is not a failed upgrade: a development install tracks the latest
+  deployment, so the line only means no scope change needed consent. Verify the version with
+  `forge deploy` output, not with the install message.
+- The Forge API token authenticates REST (`/rest/api/3/myself` as Teemu) but **cannot log into the
+  site UI**, and there is no vault entry for `one-atlas-boys`. Anything that only exists in the
+  Jira/Rovo UI — the panel, the Rovo agent — needs a human login (`browser_vault action=save_login`).
 - The seeded corpus had no comments at all, so `diagnosed` could not appear anywhere. Run
   `tools/seed-fix-comments.py` after `seed-incidents.py`; both are idempotent.
 
@@ -137,7 +158,12 @@ done (10/10, 0/3 above). **P4#2 — three evidence kinds: LIVE (v4.2.0, 2026-11-
 radar print `resolved` / `diagnosed` / `wrote up` per receipt (SPEC §7, HANDOFF decision 8).
 
 **P4b — Teamwork Graph + LLM judge** (then re-decide the org-admin trade-off) — TWG is **cut**.
-**P5 — `rovo:skill` + `rovo:agent`** (manifest-only, but only after there is data worth citing)
+**P5 — `rovo:skill` + `rovo:agent`: DEPLOYED (v4.4.0, 2026-11-05), capture outstanding.**
+`oncall-memory-agent` + skill `oncall-memory` are in the manifest, lint clean, deployed, install
+at the latest version (no scope change). The skill names the two existing actions as its tool
+dependencies and tells the agent how to read the three receipt kinds. What is missing is the one
+capture of the agent citing a real MOBL key: it needs a logged-in Rovo session, and Rovo may not
+be entitled on the demo site. **Gate: filmed by 2026-12-08 or the modules get deleted.**
 **P6 — video, listing decision, Devpost form**
 
 ## Open questions for Teemu
