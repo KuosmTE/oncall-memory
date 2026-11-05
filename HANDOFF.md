@@ -90,10 +90,20 @@ Entry log line in `onIssueCreated` means "no comment" can be told apart from "ne
    turns out unable to invoke the actions, adding `actions:` to the agent is the fallback. No new
    scopes, so the install upgrade needed no admin re-consent. The prompt stays inline (CLI 15 ≥
    10.6 would allow a resource path; at six lines a file would be noise).
-   **Not proven at runtime:** there is no capture of the agent answering with a MOBL key yet.
-   That needs a logged-in Rovo session on the demo site, and Rovo entitlement on a Forge demo
-   site is unverified (Free plans do not include Rovo). If no capture exists by **2026-12-08**,
-   delete both modules — that is the standing gate.
+   **Proven live 2026-11-05**, in a logged-in Rovo chat on the demo site (agent picked from the
+   "Switch to another agent" list, which lists `On-Call Memory`): *"Who should I ask about
+   MOBL-122?"* → Teemu Kuosmanen (wrote up / closed MOBL-70, MOBL-71, MOBL-74), Cassi Owens
+   (resolved MOBL-74), Max Taylor (resolved MOBL-71), closing with "based on the 10 most recent
+   resolved matches in this project". Citations checked against Jira REST: MOBL-74 Done/Cassi,
+   MOBL-71 Done/Max, MOBL-70 Done/Ryan Lee — no invented names or keys. **Rovo is entitled on the
+   demo site** (Ask Rovo / Open Rovo Chat are in the Jira top bar), so the risk is gone.
+   What is still missing is the *screen capture* for the submission; the pane is only driveable
+   while the desktop app is frontmost, so recording it is a human step. Gate unchanged: filmed
+   by **2026-12-08** or the modules get deleted.
+   Demo-quality note: the seeder closed every issue through the API token, so the `wrote` kind
+   points at Teemu on all seeded issues and he outranks the sample team — accurate, weak on
+   camera. Re-attributing the resolution transitions in `tools/seed-incidents.py` is the fix if
+   we want a teammate on top.
 
 ## Gotchas that cost real time
 
@@ -158,12 +168,13 @@ done (10/10, 0/3 above). **P4#2 — three evidence kinds: LIVE (v4.2.0, 2026-11-
 radar print `resolved` / `diagnosed` / `wrote up` per receipt (SPEC §7, HANDOFF decision 8).
 
 **P4b — Teamwork Graph + LLM judge** (then re-decide the org-admin trade-off) — TWG is **cut**.
-**P5 — `rovo:skill` + `rovo:agent`: DEPLOYED (v4.4.0, 2026-11-05), capture outstanding.**
+**P5 — `rovo:skill` + `rovo:agent`: DEPLOYED AND PROVEN (v4.4.0, 2026-11-05).**
 `oncall-memory-agent` + skill `oncall-memory` are in the manifest, lint clean, deployed, install
-at the latest version (no scope change). The skill names the two existing actions as its tool
-dependencies and tells the agent how to read the three receipt kinds. What is missing is the one
-capture of the agent citing a real MOBL key: it needs a logged-in Rovo session, and Rovo may not
-be entitled on the demo site. **Gate: filmed by 2026-12-08 or the modules get deleted.**
+at the latest version (no scope change). Verified in a logged-in Rovo chat: the agent appears in
+the agent switcher and answers "Who should I ask about MOBL-122?" with Teemu Kuosmanen /
+Cassi Owens / Max Taylor plus MOBL-70, 71, 74 — every citation matches Jira (decision 9).
+Remaining: a screen recording of that answer for the video (human step). **Gate: filmed by
+2026-12-08 or the modules get deleted.**
 **P6 — video, listing decision, Devpost form**
 
 ## Open questions for Teemu
