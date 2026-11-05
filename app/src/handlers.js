@@ -16,6 +16,7 @@ import {
   rankCandidates,
   rankPeople,
   receiptsText,
+  resultNote,
   toJqlText,
 } from "./engine.js";
 
