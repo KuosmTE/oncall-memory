@@ -66,6 +66,7 @@ make the cut trivial and let one bad beat be redone without losing the rest.
 | 0:00 pain | `raw-P6-pain.mp4` | Jira search, JQL `project = MOBL AND text ~ "checkout broken" ORDER BY created DESC` | A wall of 20+ near-identical resolved tickets and no name to ask |
 | 0:20 panel | `raw-P6-panel.mp4` | Open MOBL-122 (scroll the right column to the On-Call Memory card) | Three names, each with `resolved` / `diagnosed` / `wrote up`, key and date |
 | 0:40 receipt | `raw-P6-receipt.mp4` | Click the receipt key on the first person (MOBL-74) | The issue that proves it: its summary, assignee, and the fix comment |
+| 0:55 ask (after P6a) | `raw-P6-ask.mp4` | Back on MOBL-122, click **Draft the ask** under the top person | The message with the person, the query key, the receipt key and the fix, ready to send |
 | 1:10 radar | `raw-P6-radar.mp4` | Create → project MOBL → summary "Checkout failing again after this morning's build" → Create, then open the new issue and wait | The radar comment arriving with the previous fix and who to ask (≤ 3 min platform lag — keep the take long or cut after it lands) |
 | 1:50 agent | `raw-P5-agent.mp4` ✅ | Already recorded | Agent name, question, cited MOBL-70/71/74 |
 | 2:30 outside | `raw-P6-mcp.mp4` | 3 s on the admin toggle, then the terminal: `claude mcp add --transport http oncall https://mcp.atlassian.com/forge/d0c1b623-3512-4219-8760-0b15e2bd80b2` → connect → ask "who should I ask about the checkout rollback in MOBL" | The same answer from outside Atlassian, with the tool call visible |

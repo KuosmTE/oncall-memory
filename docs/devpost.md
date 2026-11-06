@@ -88,6 +88,8 @@ MCP client outside Atlassian.
 - [ ] Long description pasted
 - [ ] Category: Apps for Software Teams
 - [ ] Tracks: MCP and Agents claimed, TWG and Marketplace left alone
+- [ ] After P6a ships: add one sentence about the single-owner badge to the description (only if it
+      is deployed and filmed; do not claim a feature the panel does not print)
 - [ ] Video URL (public, unlisted check done in week 4)
 - [ ] Repo public, or judges granted access
 - [ ] Demo site access path written down (request by email or Discord)

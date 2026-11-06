@@ -179,3 +179,59 @@ was fixed — how they were there, with the issue keys to prove it."**
 Do not claim a kind that the panel does not print. If a person's only receipt is a diagnosis, the
 sentence still holds; the panel says `diagnosed — MOBL-58` and nothing more.
 
+## 13. P6a — two cheap features, decided (C and D)
+
+Both are read-only, need no new scope, no new dependency and no extra request. Both are filmable in
+one take. Build them in this order, D first if only one fits the schedule.
+
+**Shared rules.** Pure logic in `engine.js` with unit tests, presentation in `resolvers.js` and the
+panel bundle. No LLM call, no storage, no new Jira request, no write. Nothing ships from a claim the
+card cannot prove.
+
+### C. Single-owner badge ("bus factor")
+
+The same receipts, read as a risk. When every matched issue's evidence points at one person, say so.
+
+- Input: `items` (matched issues) and `people` (ranked, with `evidence[].issueKey`).
+- Rule: consider only items that have at least one receipt. If fewer than 2 such items, say
+  nothing. Otherwise take `people[0]` and compare the distinct `issueKey`s in that person's evidence
+  with the union of all evidence keys. Equal ⇒ single owner.
+- Output: `{ person, issues, of }` or `null` from `busFactor(items, people)`.
+- Panel: one line under the people list, e.g. `Single owner: Cassi Owens holds every receipt (2 of 2).`
+  Radar: append the same sentence to the comment, and only when the badge exists.
+- Tests: sole owner over 3 items → badge; two owners → null; one item → null; top person covers
+  2 of 3 → null; item with no receipts is ignored rather than counted.
+
+### D. "Draft the ask" button
+
+A name is not a message. Give the user the message.
+
+- Pure template, no model: `askDraft({ key, summary, person, receiptKey, receiptDate, fix })`.
+- Output: `Hi Cassi Owens — MOBL-122 ("We rolled the release back, checkout was broken") looks like
+  MOBL-74, which you resolved on 2026-11-04: "Raised the pool max, timeouts stopped". Could you take
+  a look?`
+- Rules: every field comes from the card. Missing `fix` drops that clause and the colon that
+  introduces it. Missing date drops the date clause. No person, no button. Never a key that is not
+  in that person's evidence.
+- Panel: one button under the top person. It copies the text and also shows it in a selectable
+  block, because the Custom UI iframe may refuse `navigator.clipboard`; the fallback has to work
+  without the clipboard, on camera.
+- Tests: full sentence with all fields; missing fix; missing date; the text never contains a key
+  that is not the provided `receiptKey`; no people ⇒ no draft.
+
+### Acceptance
+
+- `npm test` green, new cases included.
+- `npm run check` clean; deploy + install upgrade succeed with no scope change.
+- Panel and radar both show the badge on the demo corpus (MOBL-122 should qualify: the seeded
+  issues were all closed by one account).
+- The button produces a message naming the person, the query key and the receipt key.
+- `tools/eval-recall.py` unchanged at 10/10 and 0/3. These features touch presentation, not
+  retrieval, so any movement there is a bug.
+
+### Non-goals
+
+No new scopes, no comment from the button, no assignment, no caching, no LLM in either feature, no
+dashboard. If the badge fires on almost every issue on real data, the threshold is wrong, not the
+idea: it must require 2 matched issues and 100% coverage.
+

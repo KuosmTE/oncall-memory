@@ -15,6 +15,7 @@ Read this first in a fresh session. Then `SPEC.md` (product) and `DEMO.md` (film
 | Credentials | `/opt/workspace/codegeist/.env` (`FORGE_EMAIL`, `FORGE_API_TOKEN`, chmod 600) |
 | Deadline | **2026-12-22 22:00 EET** (Devpost submission) |
 | Milestones | P3 data+eval **Nov 14** · P4 LLM judge+evidence **Nov 28** · P5 agent filmed **Dec 8 (hard gate)** · video cut **Dec 15** · submit **Dec 20** |
+| Next action | **P6a: single-owner badge (C) + draft-the-ask button (D)** — spec in `SPEC.md` §13. Build, test, deploy, film. |
 
 ## Commands (the only ones that matter)
 
@@ -183,6 +184,23 @@ the agent switcher and answers "Who should I ask about MOBL-122?" with Teemu Kuo
 Cassi Owens / Max Taylor plus MOBL-70, 71, 74 — every citation matches Jira (decision 9).
 Remaining: the answer is recorded (`~/Videos/oncall-raw/raw-P5-agent.mp4`, 30 s cut
 `raw-P5-agent-answer.mp4`) — P5 is closed. **Gate met: filmed before 2026-12-08.**
+
+**P6a — C + D, decided, not built yet (SPEC §13).** Two presentation features on the existing card,
+no new scopes, no new requests, no LLM:
+
+- **C, single-owner badge.** `busFactor(items, people)` in `engine.js`: if at least two matched
+  issues have receipts and one person's evidence covers every one of them, say so in the panel and
+  append one sentence to the radar comment. On MOBL it should fire, because the seeder closed
+  everything through one account — that is the demo beat and the known attribution skew in one.
+- **D, draft the ask.** `askDraft({...})` builds the message a user would actually send, from the
+  card's own fields; the panel copies it and also shows it, since the Custom UI iframe may refuse
+  the clipboard.
+
+Order: D first if only one fits. Gate: `npm test` with the new cases, `npm run check`, deploy +
+install, then `tools/eval-recall.py` must still read 10/10 and 0/3 (these touch presentation only).
+Do not re-decide the thresholds; they are written down in §13, including why the badge needs 100 %
+coverage.
+
 **P6 — video, listing decision, Devpost form**
 
 ## Open questions for Teemu
