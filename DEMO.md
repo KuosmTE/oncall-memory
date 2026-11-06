@@ -111,6 +111,51 @@ make the cut trivial and let one bad beat be redone without losing the rest.
   the footage is disposable, the honesty is not.
 - Never say "zero config". The MCP beat exists precisely to show the one admin toggle.
 
+## Upload copy
+
+Title (≤100 chars) and the description below are ready to paste. **Fix the chapter times to the real
+cut before publishing** — a chapter that points at the wrong beat is worse than no chapters.
+
+**Title — 66 chars**
+
+```
+On-Call Memory — who to ask about this Jira issue (Codegeist 2026)
+```
+
+**Description**
+
+```
+Jira can tell you forty tickets look like yours. It cannot tell you who fixed them.
+
+On-Call Memory reads what already happened in Jira — who was the assignee at resolution,
+who wrote the comment explaining the fix, who moved it to Done — and names the people who
+did it, each with the issue keys that prove it. Your skill matrix records what people
+claim; this cites who was there when it was fixed. A name without a receipt is never
+shown, and when nothing matches the panel says so and states what it searched.
+
+Chapters
+0:00 The pain — a wall of near-identical tickets and no name to ask
+0:20 The panel — three people, each with labelled receipts
+0:40 The receipt — the issue that proves it, fix comment included
+1:10 The radar — a new ticket arrives with the previous fix already cited
+1:50 The Rovo agent — the same answer inside Jira chat
+2:30 Outside Atlassian — the same tools over MCP, after one admin toggle
+2:50 What it writes — exactly one comment, on a newly created issue
+
+Built with Forge: a Custom UI issue panel with a resolver, a product trigger that comments
+as the app, Forge LLMs (Claude Haiku) as a judge that falls back to token ranking when the
+call or the parse fails, two actions shared by a Rovo agent and two MCP tools. Scopes are
+read:jira-work and write:jira-work; the only write in the code is that single comment.
+
+Measured on the deployed path (trigger → judge → comment): ten hand-written paraphrase
+pairs, the true match in the top three 10/10; three unrelated controls, 0/3 false positives.
+
+Code: https://github.com/KuosmTE/oncall-memory
+Demo site, access on request: https://one-atlas-boys.atlassian.net — project MOBL
+
+Codegeist 2026 — Apps for Software Teams
+```
+
 ## Voice-over
 
 Recorded in P6, after the cut exists. English, calm, one sentence per beat, no

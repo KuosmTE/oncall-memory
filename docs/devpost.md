@@ -78,9 +78,14 @@ per site before a client can connect.
 
 ## Video
 
-`TBD` (public YouTube, under 5 minutes). Shows the panel on a real issue including the single-owner
-line and a drafted message, the radar comment arriving on a newly created ticket, the Rovo agent
-answering with cited keys, and the same question from an MCP client outside Atlassian.
+`TBD` — paste the URL here and into Devpost's **Video demo link**. Rules: public YouTube, ≤ 5 min;
+unlisted does not count. Title, description and chapter times are drafted in `DEMO.md` → *Upload
+copy*; correct the chapter times against the real cut before publishing, a chapter pointing at the
+wrong beat is worse than none.
+
+Shows the panel on a real issue including the single-owner line and a drafted message, the radar
+comment arriving on a newly created ticket, the Rovo agent answering with cited keys, and the same
+question from an MCP client outside Atlassian.
 
 ## Try it
 
@@ -88,8 +93,10 @@ answering with cited keys, and the same question from an MCP client outside Atla
   submitting or judges get a 404; the code is the strongest part of this entry.
 - Demo site: `https://one-atlas-boys.atlassian.net`, project MOBL, issue **MOBL-122**. The panel
   shows three people with labelled receipts, the `Single owner: …` line and the **Draft the ask**
-  button. Ask for access and I will add you, since a Forge development install cannot be installed
-  by a stranger from a link.
+  button. A Forge *development* install cannot be installed by a stranger from a link: **comment on
+  this submission with the Atlassian account email you will use and I will add you to the site.**
+  If that is too slow, the repo and the video carry the whole demo — every claim above is visible in
+  them.
 - Fresh-install check: install on a second site, open an issue with no history, confirm the panel
   renders the empty state instead of a blank frame.
 
@@ -102,7 +109,9 @@ answering with cited keys, and the same question from an MCP client outside Atla
 - [x] The single-owner badge + draft sentence is in the description above (v4.6.0, deployed and
       proven — keep it only while the panel still prints both)
 - [ ] Video URL (public, unlisted check done in week 4)
+- [ ] Chapter times in the description match the final cut (`DEMO.md` → Upload copy)
 - [ ] Repo flipped from private to public (checked 2026-11-06: still private)
-- [ ] Demo site access path written down (request by email or Discord) — one of the three options in
-      `DEMO.md` → Weekend run book, "One decision is still yours"
+- [ ] Demo site access path written down — "comment with your Atlassian email, I will add you"
+      (in Try it above); the alternative, if you would rather not watch comments, is to let the repo
+      and video carry the demo — see `DEMO.md` → Weekend run book
 - [ ] Submitted before 2026-12-20 22:00 EET
