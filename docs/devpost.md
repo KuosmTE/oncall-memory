@@ -23,6 +23,15 @@ a comment arrives with the previous fix and who to ask. Ask the Rovo agent the s
 and it answers with the same keys. The same two actions are exposed as MCP tools, so other clients
 can ask it too.
 
+The same receipts are also read as a risk: when one person's evidence covers every matched issue,
+the panel and the radar comment both say `Single owner: … holds every receipt (5 of 5)`. It needs at
+least two matched issues and 100 % coverage, so it stops firing the moment a second person owns one
+of the matches — the seeded corpus's known skew turned into a finding instead of hidden. A
+**Draft the ask** button under the top name writes the message you would actually send — the person,
+the issue you are on, the issue that proves it, the date and the fix — and puts it on the clipboard,
+or on screen as selectable text where the clipboard is blocked. It never comments, assigns or
+transitions anything: it is a copy-paste, not an automation.
+
 **The receipts rule.** Three kinds of evidence, all read from Jira: `resolved` (assignee at
 resolution), `diagnosed` (author of the fix comment), `wrote up` (who performed the resolution
 transition). Ranked by distinct issues, then how many kinds a person covers. A name without an
@@ -37,7 +46,7 @@ renders, so the judge improves quality without becoming a dependency.
 **What it measures.** Ten hand-written paraphrase pairs across four failure families, plus
 three unrelated controls, all created as real issues on a live site. The radar comment named the
 true match in the top three 10 times out of 10, and stayed silent on all three controls. That is
-the deployed path: trigger, judge, comment. The unit suite covers 26 cases with no network,
+the deployed path: trigger, judge, comment. The unit suite covers 39 cases with no network,
 including the panel's card path against canned Jira JSON.
 
 **What it does not do.** Teamwork Graph needs EAP and an Atlassian support allowlist, which puts it
@@ -69,16 +78,18 @@ per site before a client can connect.
 
 ## Video
 
-`TBD` (public YouTube, under 5 minutes). Shows the panel on a real issue, the radar comment arriving
-on a newly created ticket, the Rovo agent answering with cited keys, and the same question from an
-MCP client outside Atlassian.
+`TBD` (public YouTube, under 5 minutes). Shows the panel on a real issue including the single-owner
+line and a drafted message, the radar comment arriving on a newly created ticket, the Rovo agent
+answering with cited keys, and the same question from an MCP client outside Atlassian.
 
 ## Try it
 
-- Repo: `https://github.com/KuosmTE/oncall-memory`
-- Demo site: `https://one-atlas-boys.atlassian.net`, project MOBL. The app is installed there; ask
-  for access and I will add you, since a Forge development install cannot be installed by a
-  stranger from a link.
+- Repo: `https://github.com/KuosmTE/oncall-memory` — **private today**. Flip it public before
+  submitting or judges get a 404; the code is the strongest part of this entry.
+- Demo site: `https://one-atlas-boys.atlassian.net`, project MOBL, issue **MOBL-122**. The panel
+  shows three people with labelled receipts, the `Single owner: …` line and the **Draft the ask**
+  button. Ask for access and I will add you, since a Forge development install cannot be installed
+  by a stranger from a link.
 - Fresh-install check: install on a second site, open an issue with no history, confirm the panel
   renders the empty state instead of a blank frame.
 
@@ -88,9 +99,10 @@ MCP client outside Atlassian.
 - [ ] Long description pasted
 - [ ] Category: Apps for Software Teams
 - [ ] Tracks: MCP and Agents claimed, TWG and Marketplace left alone
-- [ ] After P6a ships: add one sentence about the single-owner badge to the description (only if it
-      is deployed and filmed; do not claim a feature the panel does not print)
+- [x] The single-owner badge + draft sentence is in the description above (v4.6.0, deployed and
+      proven — keep it only while the panel still prints both)
 - [ ] Video URL (public, unlisted check done in week 4)
-- [ ] Repo public, or judges granted access
-- [ ] Demo site access path written down (request by email or Discord)
+- [ ] Repo flipped from private to public (checked 2026-11-06: still private)
+- [ ] Demo site access path written down (request by email or Discord) — one of the three options in
+      `DEMO.md` → Weekend run book, "One decision is still yours"
 - [ ] Submitted before 2026-12-20 22:00 EET

@@ -39,6 +39,34 @@ from that one project.
 - **Fix nothing while filming.** If it breaks on camera, that is the bug list for the
   next phase — film it again after the fix.
 
+## Weekend run book (one sitting, ~2 h)
+
+Ordered so the cheapest failure comes first. The app side is already verified and live
+(v4.6.0); everything below is a human or browser action.
+
+1. **5 min — preflight.** `node tools/demo-preflight.mjs` must print `6/6 PASS`. It checks the
+   badge, the draft, the empty state, the 27-incident corpus, that no eval batch is waiting, and
+   that both demo issues are still open. Red means fix it before the camera comes out.
+2. **10 min — the panel, in a browser.** Log into `one-atlas-boys.atlassian.net`, open MOBL-122,
+   scroll the right column to **On-Call Memory**. Three people, the `Single owner: …` line, and
+   the **Draft the ask** button must all be there. If you want a later session to see this
+   without asking you again, save the login with `browser_vault`.
+3. **10 min — the MCP toggle.** Admin → Apps → Sites → one-atlas-boys → Connected apps → On-Call
+   Memory → Tools: enable both, then make one client connection **now**. Never debug MCP on camera.
+4. **40 min — record the beats** into `~/Videos/oncall-raw/`, one file per beat, as in "The beats"
+   below: pain, panel, receipt, ask, radar. The radar beat needs a ticket created **by hand** —
+   a script-created ticket with a radar comment looks staged.
+5. **0 min — the agent clip.** Already recorded (`raw-P5-agent.mp4` ✅). Re-recording it to show the
+   badge in one take is not worth the risk.
+6. **30 min — cut and upload.** 2:40–2:55, 16:9 1080p, public on YouTube, title + description written.
+7. **15 min — Devpost.** Paste from `docs/devpost.md`, fill its two `TBD`s (video URL, access path),
+   and flip the repo from private to public — the checklist there carries both.
+
+**One decision is still yours:** a Forge *development* install cannot be installed by a judge from a
+link, so "ask for access and I will add you" only works if you watch the submission comments during
+judging. The alternatives are inviting a named judge account to the demo site, or accepting that the
+video and the repo carry the demo. Pick one before you hit submit — see `docs/devpost.md` → Try it.
+
 ## Film-day run sheet (2026-11-05)
 
 Record the beats as **separate files**, one per beat, in `~/Videos/oncall-raw/`. Separate takes

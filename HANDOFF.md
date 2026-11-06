@@ -15,7 +15,7 @@ Read this first in a fresh session. Then `SPEC.md` (product) and `DEMO.md` (film
 | Credentials | `/opt/workspace/codegeist/.env` (`FORGE_EMAIL`, `FORGE_API_TOKEN`, chmod 600) |
 | Deadline | **2026-12-22 22:00 EET** (Devpost submission) |
 | Milestones | P3 data+eval **Nov 14** · P4 LLM judge+evidence **Nov 28** · P5 agent filmed **Dec 8 (hard gate)** · video cut **Dec 15** · submit **Dec 20** |
-| Next action | **P6 film day** — beats 0:20 (panel + badge), 0:55 (draft the ask), 1:10 (radar) per `DEMO.md`. P6a is built, deployed and proven (v4.6.0). |
+| Next action | **Weekend run book** — `DEMO.md` → "Weekend run book", 7 steps / ~2 h, starting with `node tools/demo-preflight.mjs` (must be 6/6 PASS). P6a is built, deployed and proven (v4.6.0); `docs/devpost.md` is updated and only has the video URL + access path left. |
 
 ## Commands (the only ones that matter)
 
@@ -28,6 +28,7 @@ npm run build:panel           # esbuild the Custom UI bundle → src/frontend/pa
 npx forge lint                # must say "No issues found"
 npm run forge:deploy          # builds the panel bundle first — never call forge deploy bare
 npx forge install --demo-site --product Jira -e development --non-interactive --confirm-scopes --upgrade
+cd .. && node tools/demo-preflight.mjs        # 6/6 PASS = the film-day state is still true
 cd .. && node tools/panel-probe.mjs MOBL-69   # the panel's resolver JSON, without a browser
 ```
 
@@ -236,6 +237,10 @@ Evidence (2026-11-06, all against the live site):
   matched issue, below the 2-item gate — the gate working, not a miss. No control got a comment.
 - `tools/eval-recall.py` on v4.6.0: **10/10 top-3 · 0/3 control false positives**
   (`tools/eval-20261106.json`) — unchanged, as it must be: these touch presentation, not retrieval.
+- `node tools/demo-preflight.mjs` asserts the badge, the draft, the empty state, the 27-incident
+  corpus (and that it is free of radar comments), the absence of an eval batch and that both demo
+  issues are still open — **6/6 PASS**. That is step 1 of the weekend run book, and it is what
+  "panel and radar both show it" means operationally.
 
 The eval batch (**MOBL-130…142**) was deleted after measuring, so the board is again 27 seeded
 incidents + **MOBL-122** (demo question) + **MOBL-127** (honest-empty control). The two demo issues
