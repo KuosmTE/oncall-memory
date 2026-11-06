@@ -162,7 +162,10 @@ Entry log line in `onIssueCreated` means "no comment" can be told apart from "ne
   radar comment, which became its "last fix" and leaked other families' words into retrieval.
   The seeder now sweeps those comments off and `eval-recall.py` refuses to measure on a dirty
   corpus (`assert_corpus_clean`).
-- Eval query issues MOBL-103…115 stay in Jira (label `oncall-eval`) — delete before filming.
+- Eval query issues carry label `oncall-eval`; the current set is **MOBL-117…129** (13 issues,
+  the 10x batch was deleted). Delete the batch before filming so the pain shot does not show
+  duplicate query tickets — but **keep MOBL-122** (the agent/panel demo question) and
+  **MOBL-127** (the honest-empty control).
 - Still open from P3: `raw-P3-panel.mp4` (see DEMO.md).
 
 **P4 — judge: LIVE (v4.1.0, 2026-11-04).** Verified on MOBL-69: comment cites MOBL-60 + MOBL-61
