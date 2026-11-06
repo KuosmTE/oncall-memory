@@ -237,3 +237,81 @@ export function resultNote(items, scanned) {
   if (scanned === 0) return "No resolved issue in this project shares vocabulary with this ticket.";
   return `Checked the ${scanned} most recent resolved matches — none looked like this.`;
 }
+
+// --- P6a: single-owner badge + the ask draft (presentation only) -------------------
+
+/**
+ * The same receipts, read as a risk. When one person's evidence covers every matched
+ * issue that carries any receipt, say so — but only from 2 matched issues up, and only at
+ * 100 % coverage; a badge that fires everywhere is noise, not a finding (SPEC §13).
+ * Returns { person, issues, of } or null.
+ */
+export function busFactor(items, people) {
+  const all = new Set();
+  for (const p of people || []) {
+    for (const e of p?.evidence || []) if (e?.issueKey) all.add(e.issueKey);
+  }
+  // Only items that carry a receipt are counted; an issue nobody touched proves nothing.
+  const covered = (items || []).filter((i) => i?.key && all.has(i.key)).map((i) => i.key);
+  if (covered.length < 2) return null;
+
+  const top = (people || [])[0];
+  const mine = new Set((top?.evidence || []).map((e) => e?.issueKey).filter(Boolean));
+  const issues = covered.filter((k) => mine.has(k)).length;
+  if (!top?.person || issues !== covered.length) return null;
+  return { person: top.person, issues, of: covered.length };
+}
+
+/** The badge as one sentence; the panel and the radar comment print the same string. */
+export function busFactorText(badge) {
+  return badge ? `Single owner: ${badge.person} holds every receipt (${badge.issues} of ${badge.of}).` : null;
+}
+
+/** Which receipt a draft should cite: a resolution first, then a close, then a diagnosis. */
+const KIND_PREFERENCE = { resolved: 0, wrote: 1, diagnosed: 2 };
+
+/**
+ * Pick the receipt the draft cites, and the fix text that belongs to it. Both come from the
+ * same card: the receipt from the person's evidence, the fix from the matched issue.
+ * A receipt whose issue has a fix beats a fresher one without, because the message's most
+ * concrete clause is the fix (DEMO beat 0:55).
+ */
+export function bestReceipt(person, items) {
+  const evidence = (person?.evidence || []).filter((e) => e?.issueKey);
+  if (!evidence.length) return null;
+  const byKey = new Map((items || []).filter((i) => i?.key).map((i) => [i.key, i]));
+  const fixOf = (e) => byKey.get(e.issueKey)?.lastFix || null;
+  const [pick] = evidence
+    .slice()
+    .sort(
+      (a, b) =>
+        (KIND_PREFERENCE[a.kind] ?? 9) - (KIND_PREFERENCE[b.kind] ?? 9) ||
+        Number(!fixOf(a)) - Number(!fixOf(b)) ||
+        byRecency(a, b)
+    );
+  const item = byKey.get(pick.issueKey);
+  return {
+    receiptKey: pick.issueKey,
+    receiptKind: pick.kind,
+    receiptDate: pick.date || item?.resolvedAt || null,
+    fix: item?.lastFix || null,
+  };
+}
+
+/** Verb that matches the receipt kind, so the message cannot claim "resolved" over a "wrote up". */
+const DRAFT_VERB = { resolved: "resolved", wrote: "closed", diagnosed: "diagnosed" };
+
+/**
+ * The message a user would actually send. Pure template, no model. Every field comes from
+ * the card, and the only issue key it can print besides the query key is the receipt key —
+ * so it can never name a ticket the card does not cite.
+ */
+export function askDraft({ key, summary, person, receiptKey, receiptDate, fix, receiptKind } = {}) {
+  if (!person || !key || !receiptKey) return null;
+  const verb = DRAFT_VERB[receiptKind] || DRAFT_VERB.resolved;
+  let clause = `${receiptKey}, which you ${verb}`;
+  if (receiptDate) clause += ` on ${receiptDate}`;
+  if (fix) clause += `: "${fix}"`;
+  const about = summary ? `${key} ("${summary}")` : key;
+  return `Hi ${person} — ${about} looks like ${clause}. Could you take a look?`;
+}

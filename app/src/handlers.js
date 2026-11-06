@@ -8,6 +8,8 @@ import api, { route } from "@forge/api";
 import { chat } from "@forge/llm";
 import {
   applyJudgement,
+  busFactor,
+  busFactorText,
   confidence,
   contentText,
   jqlTextClause,
@@ -173,15 +175,19 @@ async function closer(issueKey, mode) {
 export async function buildCard({ issueKey, text } = {}, mode = "user") {
   let query = text || "";
   let projectKey = null;
+  // The card's own subject: the draft needs the query key and summary, and fetching them
+  // again would be a second request for data this call already read.
+  let subject = { key: null, summary: text || "" };
 
   if (issueKey) {
     const ctx = await issueContext(issueKey, mode);
     projectKey = ctx.projectKey;
     query = `${ctx.summary} ${ctx.description}`;
+    subject = { key: issueKey, summary: ctx.summary };
   }
   const words = toJqlText(query);
   if (!words) {
-    return { items: [], people: [], confidence: "low", note: "Nothing to search on." };
+    return { subject, items: [], people: [], confidence: "low", note: "Nothing to search on." };
   }
 
   const scope = projectKey ? `project = "${projectKey}" AND ` : "";
@@ -210,6 +216,7 @@ export async function buildCard({ issueKey, text } = {}, mode = "user") {
   }
 
   return {
+    subject,
     items,
     people: rankPeople([...byPerson.values()], 3),
     confidence: confidence(items),
@@ -229,7 +236,7 @@ export async function memoryCard(payload) {
   return { items: card.items, confidence: card.confidence, note: card.note };
 }
 
-/** ADF for the radar comment: the fixes, who owns / closed them, and who to ask (with labels). */
+/** ADF for the radar comment: the fixes, who owns / closed them, who to ask, and the risk line. */
 function commentBody(card) {
   const bullets = card.items.slice(0, 3).map((i) => ({
     type: "listItem",
@@ -245,6 +252,8 @@ function commentBody(card) {
   const people = card.people.length
     ? [`Ask: ${card.people.map((p) => `${p.person} (${receiptsText(p)})`).join(" · ")}`]
     : [];
+  // P6a: only when the badge exists — a sentence that fires on every issue would be noise.
+  const owner = busFactorText(busFactor(card.items, card.people));
 
   return {
     type: "doc",
@@ -253,6 +262,7 @@ function commentBody(card) {
       { type: "paragraph", content: [{ type: "text", text: "On-Call Memory — this looks like it has happened before:" }] },
       { type: "bulletList", content: bullets },
       ...(people.length ? [{ type: "paragraph", content: [{ type: "text", text: people[0] }] }] : []),
+      ...(owner ? [{ type: "paragraph", content: [{ type: "text", text: owner }] }] : []),
     ],
   };
 }

@@ -35,6 +35,8 @@ test("buildCard returns a card with a note and one receipt per evidence kind", a
   assert.deepEqual([...people["Max Taylor"].kinds], ["wrote"]);
   // Every cited name must carry the key that proves it.
   for (const p of card.people) assert.ok(p.receipts.length > 0, `${p.person} has no receipt`);
+  // P6a: the draft is built from the card's own subject — no second request for it.
+  assert.deepEqual(card.subject, { key: "Q-1", summary: "Redis connection pool exhausted after deploy" });
 });
 
 test("buildCard says 'nothing to search on' instead of querying an empty ticket", async () => {

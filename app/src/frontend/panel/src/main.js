@@ -55,6 +55,23 @@ function fixRow(f) {
   );
 }
 
+function draftBlock(text) {
+  // The Custom UI iframe may refuse navigator.clipboard, so the block is revealed first and
+  // the copy is a bonus. The fallback has to work on camera without any permission.
+  const out = h("pre", { class: "drafttext", hidden: "hidden" }, text);
+  const btn = h("button", { type: "button", class: "btn" }, "Draft the ask");
+  btn.addEventListener("click", async () => {
+    out.removeAttribute("hidden");
+    try {
+      await navigator.clipboard.writeText(text);
+      btn.textContent = "Copied";
+    } catch {
+      btn.textContent = "Select the text below";
+    }
+  });
+  return h("div", { class: "draft" }, btn, out);
+}
+
 function render(data) {
   app.replaceChildren();
 
@@ -71,7 +88,13 @@ function render(data) {
   );
 
   if (data.people?.length) {
-    app.append(section("Ask these people", data.people.map(peopleRow)));
+    const rows = [];
+    data.people.forEach((p, i) => {
+      rows.push(peopleRow(p));
+      if (i === 0 && data.draft) rows.push(draftBlock(data.draft)); // under the top person
+    });
+    if (data.singleOwner) rows.push(h("p", { class: "owner" }, data.singleOwner));
+    app.append(section("Ask these people", rows));
   }
 
   app.append(

@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { applyJudgement, confidence, contentText, jqlTextClause, judgeMessages, KIND_LABEL, parseJudgement, rankCandidates, rankPeople, receiptText, receiptsText, resultNote, toJqlText, tokens, verdict } from "../src/engine.js";
+import { applyJudgement, askDraft, bestReceipt, busFactor, busFactorText, confidence, contentText, jqlTextClause, judgeMessages, KIND_LABEL, parseJudgement, rankCandidates, rankPeople, receiptText, receiptsText, resultNote, toJqlText, tokens, verdict } from "../src/engine.js";
 
 // Fixtures mirror the real failure: many issues mention "timeout", three are the same bug.
 const candidates = [
@@ -229,4 +229,131 @@ test("the empty state never says 'among the 0 most recent matches'", () => {
   assert.equal(resultNote([], 0), "No resolved issue in this project shares vocabulary with this ticket.");
   assert.match(resultNote([], 7), /Checked the 7 most recent resolved matches/);
   assert.match(resultNote([{ key: "A" }], 1), /1 most recent resolved match in this project/);
+});
+
+// --- P6a C: the single-owner badge ----------------------------------------------
+// The same receipts read as risk. The gate is written down in SPEC §13 and is not re-decided
+// here: 2 matched issues minimum, and the top person's keys must equal the union of all keys.
+const three = [{ key: "A-1" }, { key: "A-2" }, { key: "A-3" }];
+
+test("one person holding every receipt over three issues is a badge", () => {
+  const people = rankPeople([
+    { person: "Cassi Owens", evidence: [ev("resolved", "A-1", "2026-10-01"), ev("wrote", "A-2"), ev("diagnosed", "A-3")] },
+  ]);
+  assert.deepEqual(busFactor(three, people), { person: "Cassi Owens", issues: 3, of: 3 });
+  assert.equal(
+    busFactorText(busFactor(three, people)),
+    "Single owner: Cassi Owens holds every receipt (3 of 3)."
+  );
+});
+
+test("two owners means no badge", () => {
+  const people = rankPeople([
+    { person: "Cassi Owens", evidence: [ev("resolved", "A-1"), ev("resolved", "A-2")] },
+    { person: "Max Taylor", evidence: [ev("wrote", "A-3")] },
+  ]);
+  assert.equal(busFactor(three, people), null);
+  assert.equal(busFactorText(null), null);
+});
+
+test("one matched issue is never a bus factor, however few people", () => {
+  const people = rankPeople([{ person: "Cassi Owens", evidence: [ev("resolved", "A-1")] }]);
+  assert.equal(busFactor([{ key: "A-1" }], people), null);
+  assert.equal(busFactor([{ key: "A-1" }, { key: "A-2" }], []), null);
+});
+
+test("the top person covering two of three is not a single owner", () => {
+  const people = rankPeople([
+    { person: "Cassi Owens", evidence: [ev("resolved", "A-1"), ev("resolved", "A-2")] },
+    { person: "Max Taylor", evidence: [ev("wrote", "A-3")] },
+  ]);
+  assert.equal(people[0].person, "Cassi Owens", "the two-issue person ranks first");
+  assert.equal(busFactor(three, people), null);
+});
+
+test("an item with no receipts is ignored, not counted as covered", () => {
+  const people = rankPeople([{ person: "Cassi Owens", evidence: [ev("resolved", "A-1"), ev("resolved", "A-2")] }]);
+  assert.deepEqual(busFactor(three, people), { person: "Cassi Owens", issues: 2, of: 2 });
+});
+
+// --- P6a D: draft the ask --------------------------------------------------------
+const ASK = {
+  key: "MOBL-122",
+  summary: "We rolled the release back, checkout was broken",
+  person: "Cassi Owens",
+  receiptKey: "MOBL-74",
+  receiptDate: "2026-11-04",
+  fix: "Raised the pool max, timeouts stopped",
+};
+
+test("the draft is the message a human would actually send", () => {
+  assert.equal(
+    askDraft(ASK),
+    'Hi Cassi Owens — MOBL-122 ("We rolled the release back, checkout was broken") looks like MOBL-74, which you resolved on 2026-11-04: "Raised the pool max, timeouts stopped". Could you take a look?'
+  );
+});
+
+test("a missing fix takes the colon that introduces it with it", () => {
+  const text = askDraft({ ...ASK, fix: null });
+  assert.equal(
+    text,
+    'Hi Cassi Owens — MOBL-122 ("We rolled the release back, checkout was broken") looks like MOBL-74, which you resolved on 2026-11-04. Could you take a look?'
+  );
+  assert.ok(!text.includes(":"), "no colon without a fix to introduce");
+});
+
+test("a missing date drops the date clause and keeps the fix", () => {
+  assert.equal(
+    askDraft({ ...ASK, receiptDate: null }),
+    'Hi Cassi Owens — MOBL-122 ("We rolled the release back, checkout was broken") looks like MOBL-74, which you resolved: "Raised the pool max, timeouts stopped". Could you take a look?'
+  );
+});
+
+test("the draft names no issue key but the query and its receipt", () => {
+  assert.deepEqual(askDraft(ASK).match(/[A-Z]+-[0-9]+/g), ["MOBL-122", "MOBL-74"]);
+});
+
+test("no person, no draft", () => {
+  assert.equal(askDraft({ ...ASK, person: null }), null);
+  assert.equal(askDraft({}), null);
+  assert.equal(askDraft(), null);
+});
+
+test("the verb follows the receipt kind, so the label above cannot be contradicted", () => {
+  assert.match(askDraft({ ...ASK, receiptKind: "wrote" }), /which you closed on 2026-11-04/);
+  assert.match(askDraft({ ...ASK, receiptKind: "diagnosed" }), /which you diagnosed on 2026-11-04/);
+});
+
+test("the cited receipt is a resolution if there is one, else a close, else a diagnosis", () => {
+  const items = [
+    { key: "A-1", lastFix: "raised the pool", resolvedAt: "2026-09-01" },
+    { key: "A-2", lastFix: "rolled back", resolvedAt: "2026-10-09" },
+  ];
+  const [mixed] = rankPeople([
+    { person: "Cassi Owens", evidence: [ev("wrote", "A-2", "2026-10-09"), ev("resolved", "A-1", "2026-09-01")] },
+  ]);
+  assert.deepEqual(bestReceipt(mixed, items), {
+    receiptKey: "A-1",
+    receiptKind: "resolved",
+    receiptDate: "2026-09-01",
+    fix: "raised the pool",
+  });
+
+  const [closed] = rankPeople([
+    { person: "Teemu Kuosmanen", evidence: [ev("diagnosed", "A-1", "2026-10-03"), ev("wrote", "A-2", "2026-10-09")] },
+  ]);
+  assert.equal(bestReceipt(closed, items).receiptKind, "wrote", "a close outranks a diagnosis");
+  assert.equal(bestReceipt(closed, items).fix, "rolled back");
+  assert.equal(bestReceipt({ person: "Nobody", evidence: [] }, items), null);
+});
+
+test("a receipt carrying a fix beats a fresher one without it", () => {
+  const items = [
+    { key: "A-1", lastFix: "raised the pool", resolvedAt: "2026-09-01" },
+    { key: "A-2", lastFix: null, resolvedAt: "2026-10-09" },
+  ];
+  const [p] = rankPeople([
+    { person: "Cassi Owens", evidence: [ev("wrote", "A-2", "2026-10-09"), ev("wrote", "A-1", "2026-09-01")] },
+  ]);
+  assert.equal(bestReceipt(p, items).receiptKey, "A-1", "the fix is the message's most concrete clause");
 });

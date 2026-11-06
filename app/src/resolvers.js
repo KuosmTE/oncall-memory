@@ -1,6 +1,6 @@
 // Resolver for the issue panel. One engine call, plain props out; the UI stays dumb.
 import { buildCard } from "./handlers.js";
-import { verdict } from "./engine.js";
+import { askDraft, bestReceipt, busFactor, busFactorText, verdict } from "./engine.js";
 
 export async function panelData(payload) {
   const issueKey =
@@ -14,6 +14,20 @@ export async function panelData(payload) {
 
   try {
     const card = await buildCard({ issueKey }, "user");
+    // P6a: the badge reads the same receipts as risk; the draft is the message for the top person.
+    const receipt = card.people[0] ? bestReceipt(card.people[0], card.items) : null;
+    const draft = receipt && card.subject?.key
+      ? askDraft({
+        key: card.subject.key,
+        summary: card.subject.summary,
+        person: card.people[0].person,
+        receiptKey: receipt.receiptKey,
+        receiptDate: receipt.receiptDate ? receipt.receiptDate.slice(0, 10) : null,
+        fix: receipt.fix,
+        receiptKind: receipt.receiptKind,
+      })
+      : null;
+
     return {
       ok: true,
       issueKey,
@@ -40,6 +54,8 @@ export async function panelData(payload) {
         receipts: p.receipts, // plain keys, for callers that only want the links
         lastResolved: p.lastResolved ? p.lastResolved.slice(0, 10) : null,
       })),
+      singleOwner: busFactorText(busFactor(card.items, card.people)),
+      draft,
       note: card.note,
     };
   } catch (e) {

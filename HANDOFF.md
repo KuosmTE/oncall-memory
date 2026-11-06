@@ -11,18 +11,18 @@ Read this first in a fresh session. Then `SPEC.md` (product) and `DEMO.md` (film
 | App id | `ari:cloud:ecosystem::app/d0c1b623-3512-4219-8760-0b15e2bd80b2` |
 | Developer Space | Minttu Labs (account: teemu.kuosm@gmail.com) |
 | Live site | `https://one-atlas-boys.atlassian.net` (Forge demo site, ~90 days) |
-| Deployed | `development`, version **4.4.0**, **installed in Jira** on the demo site |
+| Deployed | `development`, version **4.6.0**, **installed in Jira** on the demo site |
 | Credentials | `/opt/workspace/codegeist/.env` (`FORGE_EMAIL`, `FORGE_API_TOKEN`, chmod 600) |
 | Deadline | **2026-12-22 22:00 EET** (Devpost submission) |
 | Milestones | P3 data+eval **Nov 14** · P4 LLM judge+evidence **Nov 28** · P5 agent filmed **Dec 8 (hard gate)** · video cut **Dec 15** · submit **Dec 20** |
-| Next action | **P6a: single-owner badge (C) + draft-the-ask button (D)** — spec in `SPEC.md` §13. Build, test, deploy, film. |
+| Next action | **P6 film day** — beats 0:20 (panel + badge), 0:55 (draft the ask), 1:10 (radar) per `DEMO.md`. P6a is built, deployed and proven (v4.6.0). |
 
 ## Commands (the only ones that matter)
 
 ```bash
 cd /opt/workspace/codegeist && set -a && . ./.env && set +a   # auth, no keychain, no forge login
 cd app
-npm test                      # 26 tests, no network (24 engine + 2 card-path)
+npm test                      # 39 tests, no network (37 engine + 2 card-path)
 npm run check                 # test + forge lint (the validator script was deleted: no PyYAML on this box)
 npm run build:panel           # esbuild the Custom UI bundle → src/frontend/panel/app.js
 npx forge lint                # must say "No issues found"
@@ -37,7 +37,8 @@ cd .. && node tools/panel-probe.mjs MOBL-69   # the panel's resolver JSON, witho
 app/manifest.yml                  panel + 4 functions + 2 actions + 2 MCP tools + trigger + scopes
                                   + rovo:agent `oncall-memory-agent` + rovo:skill `oncall-memory`
 app/src/skills/oncall-memory/      SKILL.md — when to call which action, how to read receipts
-app/src/engine.js                 PURE ranking (rankCandidates, rankPeople) — all logic lives here
+app/src/engine.js                 PURE ranking + presentation (rankCandidates, rankPeople,
+                                  busFactor, askDraft, bestReceipt) — all logic lives here
 app/src/handlers.js               Jira I/O: search, issue context, comment (the only write)
 app/src/resolvers.js              panel resolver → plain props
 app/src/frontend/panel/           Custom UI: index.html + src/main.js → app.js (esbuild IIFE)
@@ -131,6 +132,17 @@ Entry log line in `onIssueCreated` means "no comment" can be told apart from "ne
 - `tools/eval-recall.py` now **deletes and recreates** the `oncall-eval` fixtures. Reusing them
   silently scored the previous deployment: the trigger only fires on create, so a reused issue
   still carries the old comment and the run reports the old build's number.
+- `tools/eval-recall.py` deletes **every** issue carrying `oncall-eval`, not only its own batch.
+  MOBL-122 / MOBL-127 used to carry that label and the P6a re-measurement would have destroyed the
+  demo pair; the label was removed 2026-11-06. Never label a ticket that must appear on camera.
+- The single-owner badge needs **two matched items that have receipts**, so a card where the judge
+  keeps one match prints no badge (3 of 10 pair comments on 2026-11-06). That is the §13 gate, not
+  a regression — do not "fix" it by counting items nobody touched.
+- `bestReceipt` sorts by (kind, has a fix, recency) on purpose: the newest receipt alone gave
+  MOBL-75, which has no fix comment, and the filmed sentence lost its most concrete clause.
+- The panel probe reports the **token-ranking fallback** (no LLM outside Forge), the radar reports
+  the judge's top-5 — so the same issue can show 5 receipts in the probe and 3 in the comment. The
+  badge rule is identical; quote each from its own path.
 - `npm test` used to import only `engine.js`, so v4.3.0 shipped `resultNote is not defined`
   (the empty-state fix added the function, the import was dropped) with **24 tests green and a
   dead panel** — the probe found it, not the suite. `test/handlers.test.mjs` now calls `buildCard`
@@ -167,8 +179,10 @@ Entry log line in `onIssueCreated` means "no comment" can be told apart from "ne
   the 10x batch was deleted). Delete the batch before filming so the pain shot does not show
   duplicate query tickets — but **keep MOBL-122** (the agent/panel demo question) and
   **MOBL-127** (the honest-empty control).
-  **Done 2026-11-05:** the other 11 are deleted (all returned 204; the label now matches exactly
-  122 and 127, and all 27 `oncall-seed` incidents are intact).
+  **Done 2026-11-05:** the other 11 are deleted (all returned 204; the label then matched exactly
+  122 and 127, and all 27 `oncall-seed` incidents are intact). **2026-11-06:** both lost the
+  `oncall-eval` label when P6a was re-measured, so an eval run cannot delete them any more — see
+  Gotchas. Both are still open (`To Do`) and are what the panel beat opens.
 - Still open from P3: `raw-P3-panel.mp4` (see DEMO.md).
 
 **P4 — judge: LIVE (v4.1.0, 2026-11-04).** Verified on MOBL-69: comment cites MOBL-60 + MOBL-61
@@ -185,21 +199,48 @@ Cassi Owens / Max Taylor plus MOBL-70, 71, 74 — every citation matches Jira (d
 Remaining: the answer is recorded (`~/Videos/oncall-raw/raw-P5-agent.mp4`, 30 s cut
 `raw-P5-agent-answer.mp4`) — P5 is closed. **Gate met: filmed before 2026-12-08.**
 
-**P6a — C + D, decided, not built yet (SPEC §13).** Two presentation features on the existing card,
-no new scopes, no new requests, no LLM:
+**P6a — C + D: BUILT, DEPLOYED, PROVEN (v4.6.0, 2026-11-06).** SPEC §13, two presentation
+features on the existing card — no new scope, no new request, no LLM, no write:
 
-- **C, single-owner badge.** `busFactor(items, people)` in `engine.js`: if at least two matched
-  issues have receipts and one person's evidence covers every one of them, say so in the panel and
-  append one sentence to the radar comment. On MOBL it should fire, because the seeder closed
-  everything through one account — that is the demo beat and the known attribution skew in one.
-- **D, draft the ask.** `askDraft({...})` builds the message a user would actually send, from the
-  card's own fields; the panel copies it and also shows it, since the Custom UI iframe may refuse
-  the clipboard.
+- **C, single-owner badge.** `busFactor(items, people)` + `busFactorText(badge)` in `engine.js`.
+  Fires only from 2 receipt-bearing matched items up and only at 100 % coverage (the top person's
+  distinct evidence keys must equal the union); an issue with no receipt is ignored, not counted.
+  Panel prints the line under the people list; the radar appends the same sentence, only when the
+  badge exists.
+- **D, draft the ask.** `askDraft({...})` + `bestReceipt(person, items)` in `engine.js`.
+  `buildCard` now also returns `subject: { key, summary }` — the issue context it already fetched,
+  so the draft costs no second request. `bestReceipt` prefers a resolution, then a close, then a
+  diagnosis, and within a kind prefers an issue that actually has a fix; **the verb follows the
+  receipt kind** (`resolved` / `closed` / `diagnosed`), the one deliberate widening of the §13
+  example, because on MOBL the top person's receipt is `wrote up` and a message saying "resolved"
+  would contradict the label printed three lines above it. The panel button reveals a selectable
+  block and *then* tries `navigator.clipboard`; if the iframe refuses, the text is already on
+  screen. Nothing is written to Jira from the panel.
 
-Order: D first if only one fits. Gate: `npm test` with the new cases, `npm run check`, deploy +
-install, then `tools/eval-recall.py` must still read 10/10 and 0/3 (these touch presentation only).
-Do not re-decide the thresholds; they are written down in §13, including why the badge needs 100 %
-coverage.
+Evidence (2026-11-06, all against the live site):
+
+- `npm test` **39/39** — 13 new cases (5 badge gate, 6 draft template, 2 receipt pick); the card
+  test now pins `subject` too.
+- `npm run check` → "No issues found". Deploy **4.6.0**, install upgrade answered "already at the
+  latest version" (no scope change, no admin re-consent).
+- Panel, real resolver + real Jira REST (`node tools/panel-probe.mjs MOBL-122`):
+  `singleOwner: "Single owner: Teemu Kuosmanen holds every receipt (5 of 5)."` and
+  `draft: Hi Teemu Kuosmanen — MOBL-122 ("We rolled the release back, checkout was broken") looks
+  like MOBL-70, which you closed on 2026-11-04: "Reverted 4.18.0 to 4.17.2. The payment service
+  config was missing the retry budget;…". Could you take a look?` MOBL-127 (the honest-empty
+  control) correctly shows `No receipts`, no badge, no draft.
+- Radar, real judge, fresh issue (MOBL-135, created by the eval run, since swept): the comment ends
+  `Ask: Teemu Kuosmanen (diagnosed — MOBL-70 · wrote up — MOBL-74 · …) · Cassi Owens (resolved —
+  MOBL-74) · Max Taylor (resolved — MOBL-71) Single owner: Teemu Kuosmanen holds every receipt
+  (3 of 3).` Badge appeared on **7 of the 10 pair comments**; the other 3 cards held a single
+  matched issue, below the 2-item gate — the gate working, not a miss. No control got a comment.
+- `tools/eval-recall.py` on v4.6.0: **10/10 top-3 · 0/3 control false positives**
+  (`tools/eval-20261106.json`) — unchanged, as it must be: these touch presentation, not retrieval.
+
+The eval batch (**MOBL-130…142**) was deleted after measuring, so the board is again 27 seeded
+incidents + **MOBL-122** (demo question) + **MOBL-127** (honest-empty control). The two demo issues
+**no longer carry the `oncall-eval` label** — the eval deletes every issue with that label before
+creating its batch, and would have destroyed both. Do not label them again.
 
 **P6 — video, listing decision, Devpost form**
 
