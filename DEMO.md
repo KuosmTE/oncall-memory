@@ -39,6 +39,46 @@ from that one project.
 - **Fix nothing while filming.** If it breaks on camera, that is the bug list for the
   next phase — film it again after the fix.
 
+## Film-day run sheet (2026-11-05)
+
+Record the beats as **separate files**, one per beat, in `~/Videos/oncall-raw/`. Separate takes
+make the cut trivial and let one bad beat be redone without losing the rest.
+
+### Before the camera rolls
+
+1. `oncall-eval` fixtures out of the way: delete the batch, keep the two that appear on camera —
+   `project = MOBL AND labels = oncall-eval AND key not in (MOBL-122, MOBL-127)`.
+2. **Panel**: open MOBL-122 and scroll the right column past **Automation**. The **On-Call
+   Memory** card sits below the field sections; it must show three people with kinds and dates.
+   *If that card is not there, stop — that is a bug to fix before filming, not a filming problem.*
+3. **Agent**: Rovo chat → **Change agent** → search `On-Call` → **On-Call Memory**; dismiss the
+   "Try Rovo on your phone" promo card (it covers the answer).
+4. **MCP**: admin toggle ON (Atlassian Admin → Apps → Sites → one-atlas-boys → Connected apps →
+   On-Call Memory → Tools), and one successful client connection **tested before recording** —
+   never debug the MCP beat on camera.
+5. Browser: 1920×1080 (or 2560×1440), zoom 100 %, notifications off, bookmark bar hidden,
+   one tab only.
+
+### The beats
+
+| Beat | File | Do exactly this | Must be on screen |
+|---|---|---|---|
+| 0:00 pain | `raw-P6-pain.mp4` | Jira search, JQL `project = MOBL AND text ~ "checkout broken" ORDER BY created DESC` | A wall of 20+ near-identical resolved tickets and no name to ask |
+| 0:20 panel | `raw-P6-panel.mp4` | Open MOBL-122 (scroll the right column to the On-Call Memory card) | Three names, each with `resolved` / `diagnosed` / `wrote up`, key and date |
+| 0:40 receipt | `raw-P6-receipt.mp4` | Click the receipt key on the first person (MOBL-74) | The issue that proves it: its summary, assignee, and the fix comment |
+| 1:10 radar | `raw-P6-radar.mp4` | Create → project MOBL → summary "Checkout failing again after this morning's build" → Create, then open the new issue and wait | The radar comment arriving with the previous fix and who to ask (≤ 3 min platform lag — keep the take long or cut after it lands) |
+| 1:50 agent | `raw-P5-agent.mp4` ✅ | Already recorded | Agent name, question, cited MOBL-70/71/74 |
+| 2:30 outside | `raw-P6-mcp.mp4` | 3 s on the admin toggle, then the terminal: `claude mcp add --transport http oncall https://mcp.atlassian.com/forge/d0c1b623-3512-4219-8760-0b15e2bd80b2` → connect → ask "who should I ask about the checkout rollback in MOBL" | The same answer from outside Atlassian, with the tool call visible |
+| 2:50 line | — | Text card or VO only | "Read-only except one comment. One admin toggle. Install link in the description." |
+
+### Rules that keep it honest on camera
+
+- The radar beat needs a **real new issue**; `ignoreSelf` means the app's own writes never fire it,
+  and a radar comment that appears on a ticket created by a script looks staged.
+- Do not fix, retry or edit anything mid-take. If a beat fails, stop the take, fix, start again —
+  the footage is disposable, the honesty is not.
+- Never say "zero config". The MCP beat exists precisely to show the one admin toggle.
+
 ## Voice-over
 
 Recorded in P6, after the cut exists. English, calm, one sentence per beat, no
