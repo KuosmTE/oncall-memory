@@ -166,6 +166,8 @@ Entry log line in `onIssueCreated` means "no comment" can be told apart from "ne
   the 10x batch was deleted). Delete the batch before filming so the pain shot does not show
   duplicate query tickets — but **keep MOBL-122** (the agent/panel demo question) and
   **MOBL-127** (the honest-empty control).
+  **Done 2026-11-05:** the other 11 are deleted (all returned 204; the label now matches exactly
+  122 and 127, and all 27 `oncall-seed` incidents are intact).
 - Still open from P3: `raw-P3-panel.mp4` (see DEMO.md).
 
 **P4 — judge: LIVE (v4.1.0, 2026-11-04).** Verified on MOBL-69: comment cites MOBL-60 + MOBL-61
@@ -200,6 +202,9 @@ External MCP exposure is **off by default per app**. Before the 2:30 demo beat:
 Never call the app "zero config" in copy. Say "one admin toggle, then any MCP client".
 
 ## Devpost submission artifact — write this before the video, not after
+
+Draft lives in `docs/devpost.md` (tagline 114 chars, long description 586 words, tracks and
+checklist included). Fill the video URL and the access path, then paste.
 
 - [ ] Tagline (one sentence, ≤140 chars) — must not claim AI judging until P4 lands
 - [ ] Long description: problem → product → receipts rule → how the tech requirement is met
