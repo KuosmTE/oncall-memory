@@ -37,6 +37,8 @@ test("buildCard returns a card with a note and one receipt per evidence kind", a
   for (const p of card.people) assert.ok(p.receipts.length > 0, `${p.person} has no receipt`);
   // P6a: the draft is built from the card's own subject — no second request for it.
   assert.deepEqual(card.subject, { key: "Q-1", summary: "Redis connection pool exhausted after deploy" });
+  // P6b: no graph outside Forge, so the load is unknown (null) and the panel prints no line.
+  for (const p of card.people) assert.equal(p.open, null, `${p.person} should have no load outside Forge`);
 });
 
 test("buildCard says 'nothing to search on' instead of querying an empty ticket", async () => {

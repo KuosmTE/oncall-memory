@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { applyJudgement, askDraft, bestReceipt, busFactor, busFactorText, confidence, contentText, jqlTextClause, judgeMessages, KIND_LABEL, parseJudgement, rankCandidates, rankPeople, receiptText, receiptsText, resultNote, toJqlText, tokens, verdict } from "../src/engine.js";
+import { applyJudgement, askDraft, bestReceipt, busFactor, busFactorText, confidence, contentText, jqlTextClause, judgeMessages, KIND_LABEL, parseJudgement, rankCandidates, rankPeople, receiptText, receiptsText, resultNote, toJqlText, tokens, userAri, verdict, workloadCount, workloadLine, workloadQuery } from "../src/engine.js";
 
 // Fixtures mirror the real failure: many issues mention "timeout", three are the same bug.
 const candidates = [
@@ -356,4 +356,39 @@ test("a receipt carrying a fix beats a fresher one without it", () => {
     { person: "Cassi Owens", evidence: [ev("wrote", "A-2", "2026-10-09"), ev("wrote", "A-1", "2026-09-01")] },
   ]);
   assert.equal(bestReceipt(p, items).receiptKey, "A-1", "the fix is the message's most concrete clause");
+});
+
+// --- P6b: current load from the Teamwork Graph ------------------------------------
+// The graph answers "how much is this person carrying right now?". A missing scope returns a
+// successful EMPTY result, so the only honest "unknown" is an error or a missing connection —
+// otherwise 0 would read as "nothing assigned" when it may mean "not allowed".
+const edge = (key) => ({ node: { status: { statusCategory: { key } } } });
+
+test("the workload query is the curated field, with the user's ARI as its argument", () => {
+  const q = workloadQuery();
+  assert.match(q, /atlassianUserAssignedJiraWorkItems\(userId: \$userId/);
+  assert.match(q, /statusCategory \{ key \}/);
+  assert.equal(userAri("5acdffacbaaf152a7655ceb6"), "ari:cloud:identity::user/5acdffacbaaf152a7655ceb6");
+  assert.equal(userAri(null), null);
+});
+
+test("done items are not load; errors and a missing connection are unknown, not zero", () => {
+  const conn = (edges, hasNextPage = false) => ({
+    data: { atlassianUserAssignedJiraWorkItems: { edges, pageInfo: { hasNextPage } } },
+  });
+  assert.deepEqual(workloadCount(conn([edge("new"), edge("indeterminate"), edge("done")])), { open: 2, more: false });
+  assert.deepEqual(workloadCount(conn([edge("done"), edge("done")])), { open: 0, more: false });
+  assert.deepEqual(workloadCount(conn([edge("new")], true)), { open: 1, more: true });
+  assert.equal(workloadCount({ errors: [{ message: "forbidden" }], data: null }), null);
+  assert.equal(workloadCount({ data: {} }), null);
+  assert.equal(workloadCount(null), null);
+});
+
+test("the load line says what the graph proved, including the 25-row cap", () => {
+  assert.equal(workloadLine({ open: 1, more: false }), "1 open item");
+  assert.equal(workloadLine({ open: 3, more: false }), "3 open items");
+  assert.equal(workloadLine({ open: 25, more: true }), "25+ open items");
+  assert.equal(workloadLine({ open: 0, more: false }), "0 open items");
+  assert.equal(workloadLine(null), null);
+  assert.equal(workloadLine({}), null);
 });

@@ -315,3 +315,47 @@ export function askDraft({ key, summary, person, receiptKey, receiptDate, fix, r
   const about = summary ? `${key} ("${summary}")` : key;
   return `Hi ${person} — ${about} looks like ${clause}. Could you take a look?`;
 }
+
+// --- P6b: current load from the Teamwork Graph (Preview) ---------------------------
+
+/**
+ * The curated query behind "who is loaded right now". Curated means no Cypher text and no
+ * registration step — the field name is the contract. It counts assigned work, so anything in
+ * the Done status category is excluded: everything else is still on that person.
+ */
+export function workloadQuery() {
+  return `query oncall_workload($userId: ID!) {
+  atlassianUserAssignedJiraWorkItems(userId: $userId, first: 25) {
+    edges { node { ... on JiraWorkItem { status { name statusCategory { key } } } } }
+    pageInfo { hasNextPage }
+  }
+}`;
+}
+
+/** ARI of an Atlassian account — what every graph query takes as its identity argument. */
+export function userAri(accountId) {
+  return accountId ? `ari:cloud:identity::user/${accountId}` : null;
+}
+
+/**
+ * Open items from a graph response, or null when the answer cannot be trusted. A missing scope
+ * comes back as a *successful empty* result, so `errors` and a missing connection are the only
+ * honest "unknown" signals — a 0 has to mean "really nothing assigned", not "not allowed".
+ * The curated query caps at 25 rows, so `more` says the real number is higher than counted.
+ */
+export function workloadCount(json) {
+  if (json?.errors?.length) return null;
+  const conn = json?.data?.atlassianUserAssignedJiraWorkItems;
+  if (!Array.isArray(conn?.edges)) return null;
+  const open = conn.edges.filter(
+    (e) => String(e?.node?.status?.statusCategory?.key || "").toLowerCase() !== "done"
+  ).length;
+  return { open, more: conn.pageInfo?.hasNextPage === true };
+}
+
+/** "3 open items" / "25+ open items" — or null when there is nothing to say. */
+export function workloadLine(load) {
+  if (!load || typeof load.open !== "number" || !Number.isFinite(load.open)) return null;
+  const n = load.more ? `${load.open}+` : `${load.open}`;
+  return `${n} open item${load.open === 1 && !load.more ? "" : "s"}`;
+}

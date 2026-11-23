@@ -126,5 +126,7 @@ permissions:
     - read:jira-work
     # write: exactly one comment on a newly created issue (the radar). Nothing else writes.
     - write:jira-work
-    # read:graph:jira is deliberately NOT declared yet: the Teamwork Graph query lands in P4,
-    # and declaring an unused TWG scope would force judges through an org-admin install.
+    # P6b: current load for the people we cite — Teamwork Graph, Preview, read-only, per-object
+    # scopes (the product-wide read:graph:jira is being retired). Missing consent degrades to no line.
+    - read:graph:issue:jira
+    - read:graph:user:atlassian

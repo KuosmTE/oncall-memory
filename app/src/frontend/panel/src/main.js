@@ -1,6 +1,6 @@
 // Custom UI panel. Plain DOM, no framework: the resolver already shaped the data.
 import { invoke } from "@forge/bridge";
-import { KIND_LABEL } from "../../../engine.js";
+import { KIND_LABEL, workloadLine } from "../../../engine.js";
 
 const app = document.getElementById("app");
 
@@ -37,6 +37,9 @@ function peopleRow(p) {
     if (i < evidence.length - 1) line.append(document.createTextNode(" · "));
   });
   if (p.lastResolved) line.append(document.createTextNode(` · last resolved ${p.lastResolved}`));
+  // P6b: what that person is carrying right now, from the graph. Absent when the graph said nothing.
+  const load = workloadLine(p.open);
+  if (load) line.append(document.createTextNode(` · ${load}`));
 
   return h("div", { class: "row" }, h("span", { class: "name" }, p.person), line);
 }

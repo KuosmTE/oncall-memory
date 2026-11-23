@@ -6067,6 +6067,11 @@ Please see https://iframe-resizer.com/upgrade for more details.
     "the a an and or of for to in on with is was were be been it this that from at as by not no you your we our when then there here".split(" ")
   );
   var KIND_LABEL = { resolved: "resolved", diagnosed: "diagnosed", wrote: "wrote up" };
+  function workloadLine(load) {
+    if (!load || typeof load.open !== "number" || !Number.isFinite(load.open)) return null;
+    const n = load.more ? `${load.open}+` : `${load.open}`;
+    return `${n} open item${load.open === 1 && !load.more ? "" : "s"}`;
+  }
 
   // src/frontend/panel/src/main.js
   var app = document.getElementById("app");
@@ -6095,6 +6100,8 @@ Please see https://iframe-resizer.com/upgrade for more details.
       if (i < evidence.length - 1) line.append(document.createTextNode(" \xB7 "));
     });
     if (p.lastResolved) line.append(document.createTextNode(` \xB7 last resolved ${p.lastResolved}`));
+    const load = workloadLine(p.open);
+    if (load) line.append(document.createTextNode(` \xB7 ${load}`));
     return h("div", { class: "row" }, h("span", { class: "name" }, p.person), line);
   }
   function fixRow(f) {

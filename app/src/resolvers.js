@@ -53,6 +53,8 @@ export async function panelData(payload) {
         kinds: p.kinds,
         receipts: p.receipts, // plain keys, for callers that only want the links
         lastResolved: p.lastResolved ? p.lastResolved.slice(0, 10) : null,
+        // P6b: { open, more } from the Teamwork Graph, or null when the graph gave no answer.
+        open: p.open || null,
       })),
       singleOwner: busFactorText(busFactor(card.items, card.people)),
       draft,

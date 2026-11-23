@@ -20,6 +20,9 @@ import {
   receiptsText,
   resultNote,
   toJqlText,
+  userAri,
+  workloadCount,
+  workloadQuery,
 } from "./engine.js";
 
 // Haiku: cheapest active Forge LLM tier — this is a yes/no with a one-line reason, not reasoning.
@@ -86,10 +89,11 @@ function lastFixOf(issue) {
     return {
       text: text.length > 240 ? `${text.slice(0, 237)}…` : text,
       author: isPerson(comments[i].author) ? comments[i].author.displayName : null,
+      authorId: comments[i].author?.accountId || null,
       created: comments[i].created || null,
     };
   }
-  return { text: null, author: null, created: null };
+  return { text: null, author: null, authorId: null, created: null };
 }
 
 async function search(jql, mode, max = 25) {
@@ -128,10 +132,12 @@ function toCandidate(issue) {
     lastFix: fix.text,
     // Evidence kind 2 — the person who wrote the fix comment down (no extra request).
     diagnosedBy: fix.author,
+    diagnosedById: fix.authorId,
     diagnosedAt: fix.created,
     resolution: issue.fields?.resolution?.name || null,
     // Evidence kind 1 — "assignee at resolution": who owns it, not who clicked Done.
     resolvedBy: isPerson(issue.fields?.assignee) ? issue.fields.assignee.displayName : null,
+    resolvedById: isPerson(issue.fields?.assignee) ? issue.fields.assignee.accountId || null : null,
     resolvedAt: issue.fields?.resolutiondate || null,
     status: issue.fields?.status?.name || null,
   };
@@ -158,7 +164,9 @@ async function closer(issueKey, mode) {
       for (const item of h.items || []) {
         if (item.field !== "resolution") continue;
         // A cleared resolution means it was reopened: the earlier transition no longer counts.
-        hit = item.toString && isPerson(h.author) ? { actor: h.author.displayName, date: h.created || null } : null;
+        hit = item.toString && isPerson(h.author)
+          ? { actor: h.author.displayName, accountId: h.author.accountId || null, date: h.created || null }
+          : null;
       }
     }
     return hit;
@@ -169,8 +177,31 @@ async function closer(issueKey, mode) {
 }
 
 /**
+ * P6b: how much work the person already has, from the Teamwork Graph. Curated query, and user
+ * context only — an app identity has no per-user permissions, so the trigger never calls it.
+ * Any failure (no consent, Preview hiccup, no accountId) is null, and the panel prints no line.
+ */
+async function openItems(accountId, mode) {
+  if (mode === "app" || !accountId) return null;
+  const client = api.asUser();
+  // Outside Forge (tools/panel-probe.mjs) the SDK has no requestTeamworkGraph: no graph, no line.
+  if (typeof client.requestTeamworkGraph !== "function") return null;
+  try {
+    const res = await client.requestTeamworkGraph(workloadQuery(), { userId: userAri(accountId) });
+    if (!res.ok) {
+      console.error(`twg ${accountId}: ${res.status}`);
+      return null;
+    }
+    return workloadCount(await res.json());
+  } catch (e) {
+    console.error(`twg ${accountId}: ${e.message}`);
+    return null;
+  }
+}
+
+/**
  * The single engine call behind both front doors: one search, one ranking, both answers.
- * Returns { items, people, confidence, note } — never a bare name, never a bare claim.
+ * Returns { subject, items, people, confidence, note } — never a bare name, never a bare claim.
  */
 export async function buildCard({ issueKey, text } = {}, mode = "user") {
   let query = text || "";
@@ -199,7 +230,12 @@ export async function buildCard({ issueKey, text } = {}, mode = "user") {
   const ranked = await judge(query, rankCandidates(words, issues.map(toCandidate), MAX_MATCHES));
   // Who closed each match (evidence kind 3). Only the surviving matches, in parallel, ≤5 requests.
   const closers = await Promise.all(ranked.map((m) => closer(m.key, mode)));
-  const items = ranked.map((m, i) => ({ ...m, wroteBy: closers[i]?.actor || null, wroteAt: closers[i]?.date || null }));
+  const items = ranked.map((m, i) => ({
+    ...m,
+    wroteBy: closers[i]?.actor || null,
+    wroteById: closers[i]?.accountId || null,
+    wroteAt: closers[i]?.date || null,
+  }));
 
   // One row per person, one receipt per (kind, issue). A kind we cannot prove is simply absent.
   const add = (rows, person, kind, issueKey, date) => {
@@ -209,16 +245,27 @@ export async function buildCard({ issueKey, text } = {}, mode = "user") {
     rows.set(person, row);
   };
   const byPerson = new Map();
+  const idByName = new Map(); // the graph needs an accountId, and the card only carries names
+  const noteId = (name, id) => {
+    if (name && id && !idByName.has(name)) idByName.set(name, id);
+  };
   for (const m of items) {
     add(byPerson, m.resolvedBy, "resolved", m.key, m.resolvedAt);
     add(byPerson, m.diagnosedBy, "diagnosed", m.key, m.diagnosedAt);
     add(byPerson, m.wroteBy, "wrote", m.key, m.wroteAt);
+    noteId(m.resolvedBy, m.resolvedById);
+    noteId(m.diagnosedBy, m.diagnosedById);
+    noteId(m.wroteBy, m.wroteById);
   }
+
+  const people = rankPeople([...byPerson.values()], 3);
+  // P6b: current load for the people about to be recommended — one graph call each, in parallel.
+  const loads = await Promise.all(people.map((p) => openItems(idByName.get(p.person), mode)));
 
   return {
     subject,
     items,
-    people: rankPeople([...byPerson.values()], 3),
+    people: people.map((p, i) => ({ ...p, open: loads[i] })),
     confidence: confidence(items),
     note: resultNote(items, issues.length),
   };
