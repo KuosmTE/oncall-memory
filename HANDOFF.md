@@ -9,7 +9,7 @@ Read this first in a fresh session. Then `SPEC.md` (product) and `DEMO.md` (film
 | Repo (local) | `/opt/workspace/codegeist` |
 | App dir | `/opt/workspace/codegeist/app` |
 | App id | `ari:cloud:ecosystem::app/d0c1b623-3512-4219-8760-0b15e2bd80b2` |
-| Developer Space | Minttu Labs (account: teemu.kuosm@gmail.com) |
+| Developer Space | Minttu Labs (account: teemu.kuosm@gmail.com) — **rename to `bittisorvi.org`** in the console: that string is what the install page shows as the provider |
 | Live site | `https://one-atlas-boys.atlassian.net` (Forge demo site, ~90 days) |
 | Deployed | `development` version **4.6.0**, installed in Jira on the demo site · **production version 2.0.0** (2026-11-23, prerequisite for the judges' installation link) |
 | Credentials | `/opt/workspace/codegeist/.env` (`FORGE_EMAIL`, `FORGE_API_TOKEN`, chmod 600) |
