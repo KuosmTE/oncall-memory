@@ -34,9 +34,11 @@ b. Open
    <https://developer.atlassian.com/console/myapps/d0c1b623-3512-4219-8760-0b15e2bd80b2/manage/distribution>
 c. **Distribution controls → Edit → Sharing** — not "Sharing within organization", the judges are
    outside your org.
-d. Fill the form: company `Minttu Labs`; support `https://github.com/KuosmTE/oncall-memory/issues`;
+d. Fill the form: company `bittisorvi.org`; support `https://github.com/KuosmTE/oncall-memory/issues`;
    privacy `https://github.com/KuosmTE/oncall-memory/blob/main/PRIVACY.md`; *stores personal data*
-   → **No**.
+   → **No**. (The Atlassian **Developer Space** is still named "Minttu Labs" — that is the string the
+   install page shows as the provider. Rename it in the console first if you want the two to match;
+   it is a one-field change and costs nothing.)
 e. Products: **Jira**. Save changes, then copy the generated installation link.
 f. Paste the link into `JUDGES.md` (marker `INSTALL_LINK`) and into the Devpost **Access** field.
 g. **Test it as a stranger**: incognito → the link → sign in as admin of a *second* free site →
@@ -81,6 +83,21 @@ probe script, and compare the answer against Jira.
 - Returns sensible data → build the person-context line (team + open work next to a name), ~1 day.
 - Empty or error → stop and ship what we have. Preview quirks are documented: a missing scope returns
   an *empty result, not an error*, so verify any empty answer against Jira before calling it a dead end.
+
+## 6. What can change after you submit
+
+- The rules freeze the **Submission** (video, text, links) at the end of the Submission Period; the
+  **project** may keep evolving ("you may continue to update the Project in your Devpost portfolio").
+- Judging runs **2027-01-05 → 02-03** and judges install from the link then. So the version that
+  counts is whatever production holds during judging, not what it held on submit day.
+- The video must "function as depicted". A feature that lands after the cut is invisible to judges; a
+  feature that changes behaviour after the cut makes the video wrong. That is the real deadline, and it
+  is the recording session, not the submit button.
+- **Development is still yours.** The demo site is installed on `development`, so you can iterate,
+  re-seed, break and redeploy there all day without touching a judge's install. Production is the
+  artifact.
+- After submit: bug fixes are fine; **new scopes are not** (existing installs would need re-consent
+  during judging). Deploy code-only fixes.
 
 ## Not doing (decided, so it stops costing attention)
 
