@@ -68,13 +68,29 @@ issues were closed through the API, so the "wrote up" kind points at the same ac
 them; on a real project that field spreads across the team. The MCP surface needs one admin toggle
 per site before a client can connect.
 
+## How it meets the technology requirement
+
+The app is a Forge app with eight module types: a Custom UI `jira:issuePanel` with a resolver, four
+`function` handlers (panel, radar trigger, two actions), two `action` entries, a product `trigger` on
+`avi:jira:created:issue`, a `rovo:agent` with a `rovo:skill`, a `rovo:mcp` exposing the two actions as
+MCP tools, and the `llm` module for the judge. Everything runs on Forge (`nodejs24.x`), with no
+external service: reads go through `@forge/api` as the user in the panel and as the app in the trigger,
+and the only write is one comment created with `write:jira-work`.
+
 ## Tracks
 
 - **Apps for Software Teams** (category)
-- **MCP**: yes. Two tools over `rovo:mcp`, one admin toggle, then any MCP client.
-- **Agents**: yes. A Rovo agent answers "who should I ask about MOBL-122?" and cites issue keys.
-- **Teamwork Graph**: no. EAP plus an allowlist put it outside the schedule.
-- **Marketplace**: no. Not pursued for this submission.
+- **Best Agents** — $1,500 bonus. The app ships `rovo:agent` `oncall-memory-agent` plus a reusable
+  `rovo:skill`; the agent answers "who should I ask about this issue?" with cited keys.
+- **Best app with Atlassian MCP** — $1,500 bonus. Two tools over `rovo:mcp` (`who-knows`,
+  `has-happened-before`) plus a `SKILL.md` written for third-party agents.
+- **Teamwork Graph** — not claimed as of 2026-11-23: the API entered Preview on 2026-10-15 and the
+  app does not consume the graph yet (`docs/week-plan.md` §5 holds the 45-minute spike that decides it).
+- **Marketplace published app** — not claimed: an app submitted for listing can no longer be shared
+  through an installation link, and the installation link is a judging requirement.
+
+One submission can win at most one Grand Prize and one Bonus Prize, so both bonus categories are
+selected and the strongest one counts.
 
 ## Video
 
@@ -89,14 +105,15 @@ question from an MCP client outside Atlassian.
 
 ## Try it
 
-- Repo: `https://github.com/KuosmTE/oncall-memory` — **private today**. Flip it public before
-  submitting or judges get a 404; the code is the strongest part of this entry.
-- Demo site: `https://one-atlas-boys.atlassian.net`, project MOBL, issue **MOBL-122**. The panel
-  shows three people with labelled receipts, the `Single owner: …` line and the **Draft the ask**
-  button. A Forge *development* install cannot be installed by a stranger from a link: **comment on
-  this submission with the Atlassian account email you will use and I will add you to the site.**
-  If that is too slow, the repo and the video carry the whole demo — every claim above is visible in
-  them.
+- **Installation link for judges:** `INSTALL_LINK` (from the developer console → Distribution → Sharing;
+  regenerating it invalidates the previous link). Two scopes, one comment, no external services.
+- **Judge instructions:** [`JUDGES.md`](../JUDGES.md) — install, where the panel is, how to see the radar,
+  the Rovo agent, the MCP setup, and what to expect.
+- Repo: `https://github.com/KuosmTE/oncall-memory`.
+- Demo site (optional): `https://one-atlas-boys.atlassian.net`, project MOBL, issue **MOBL-122**. The
+  panel shows three people with labelled receipts, the `Single owner: …` line and the **Draft the ask**
+  button. Access on request: comment on the submission with your Atlassian account email.
+- Privacy: [`PRIVACY.md`](../PRIVACY.md) — nothing is stored; only the judged issue text leaves the site.
 - Fresh-install check: install on a second site, open an issue with no history, confirm the panel
   renders the empty state instead of a blank frame.
 
@@ -105,13 +122,15 @@ question from an MCP client outside Atlassian.
 - [ ] Tagline pasted, under 140 characters
 - [ ] Long description pasted
 - [ ] Category: Apps for Software Teams
-- [ ] Tracks: MCP and Agents claimed, TWG and Marketplace left alone
+- [ ] Bonus prizes: Best Agents **and** Best app with Atlassian MCP selected
 - [x] The single-owner badge + draft sentence is in the description above (v4.6.0, deployed and
       proven — keep it only while the panel still prints both)
+- [x] "How it meets the technology requirement" written (module list, scopes, no external service)
+- [ ] Installation link generated and pasted (`docs/week-plan.md` §1); tested in incognito on a
+      second site as its admin
+- [ ] `JUDGES.md` linked from the submission as the testing instructions
 - [ ] Video URL (public, unlisted check done in week 4)
 - [ ] Chapter times in the description match the final cut (`DEMO.md` → Upload copy)
 - [ ] Repo flipped from private to public (checked 2026-11-06: still private)
-- [ ] Demo site access path written down — "comment with your Atlassian email, I will add you"
-      (in Try it above); the alternative, if you would rather not watch comments, is to let the repo
-      and video carry the demo — see `DEMO.md` → Weekend run book
-- [ ] Submitted before 2026-12-20 22:00 EET
+- [ ] Demo site access path written down ("comment with your Atlassian email")
+- [ ] Submitted before 2026-12-15 (slack) / hard stop 2026-12-22 12:00 pm PT

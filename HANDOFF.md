@@ -11,11 +11,25 @@ Read this first in a fresh session. Then `SPEC.md` (product) and `DEMO.md` (film
 | App id | `ari:cloud:ecosystem::app/d0c1b623-3512-4219-8760-0b15e2bd80b2` |
 | Developer Space | Minttu Labs (account: teemu.kuosm@gmail.com) |
 | Live site | `https://one-atlas-boys.atlassian.net` (Forge demo site, ~90 days) |
-| Deployed | `development`, version **4.6.0**, **installed in Jira** on the demo site |
+| Deployed | `development` version **4.6.0**, installed in Jira on the demo site · **production version 2.0.0** (2026-11-23, prerequisite for the judges' installation link) |
 | Credentials | `/opt/workspace/codegeist/.env` (`FORGE_EMAIL`, `FORGE_API_TOKEN`, chmod 600) |
 | Deadline | **2026-12-22 22:00 EET** (Devpost submission) |
 | Milestones | P3 data+eval **Nov 14** · P4 LLM judge+evidence **Nov 28** · P5 agent filmed **Dec 8 (hard gate)** · video cut **Dec 15** · submit **Dec 20** |
-| Next action | **Weekend run book** — `DEMO.md` → "Weekend run book", 7 steps / ~2 h, starting with `node tools/demo-preflight.mjs` (must be 6/6 PASS). P6a is built, deployed and proven (v4.6.0); `docs/devpost.md` is updated and only has the video URL + access path left. |
+| Next action | **`docs/week-plan.md`** — 29 days to the 2026-12-22 deadline. Step 1 is the judges' installation link (browser, 25 min): flip the repo public → Developer Console → Distribution → Sharing → paste into `JUDGES.md` + Devpost. Then record, upload, submit by 2026-12-15. |
+
+## Contest facts (verified 2026-11-23, `codegeist2026.devpost.com/rules`)
+
+- Deadline **2026-12-22 12:00 pm PT = 22:00 EET**; judging 2027-01-05 → 02-03; winners ~2027-02-15.
+- Categories: Apps for Software Teams · Business Teams · Specialized Industries. Ours is Software Teams.
+- **Bonus prizes** ($1,500, 6 winners each): Best Agents (Rovo/assignable) · Best app with Atlassian
+  MCP · Best Teamwork Graph integration · Best Marketplace published app.
+- **One submission can win at most one Grand Prize and one Bonus Prize** — claim two bonuses, expect one.
+- **An installation link is mandatory** for judging, made in the developer console after a
+  **production** deploy. A demo-site install does not count.
+- **Multiple submissions are allowed** but each must be "unique and substantially different".
+- Judging: five equally weighted criteria — Technological Implementation, Design, Potential Impact,
+  Innovation/Idea, Presentation.
+- Participation swag: first 300 eligible submissions — submit early, not on the last day.
 
 ## Commands (the only ones that matter)
 
@@ -30,6 +44,8 @@ npm run forge:deploy          # builds the panel bundle first — never call for
 npx forge install --demo-site --product Jira -e development --non-interactive --confirm-scopes --upgrade
 cd .. && node tools/demo-preflight.mjs        # 6/6 PASS = the film-day state is still true
 cd .. && node tools/panel-probe.mjs MOBL-69   # the panel's resolver JSON, without a browser
+cd app && npx forge deploy -e production      # judges install from the production deploy; sharing
+                                              # lives at .../myapps/<appId>/manage/distribution
 ```
 
 ## Architecture
@@ -144,6 +160,15 @@ Entry log line in `onIssueCreated` means "no comment" can be told apart from "ne
 - The panel probe reports the **token-ranking fallback** (no LLM outside Forge), the radar reports
   the judge's top-5 — so the same issue can show 5 receipts in the probe and 3 in the comment. The
   badge rule is identical; quote each from its own path.
+- `forge deploy -e production` failed its first run with `Error: Request timed out after 300000ms` in
+  the lint step, then succeeded unchanged on a retry (production 2.0.0). A lint timeout is not a lint
+  failure — retry before reaching for `--no-verify`.
+- The judges' **installation link** only exists after a *production* deploy (docs: deploy to production,
+  then developer console → Distribution → Sharing). It is invalidated every time sharing is re-saved,
+  so regenerate and re-paste into `JUDGES.md` after any change to the distribution settings.
+- An app **submitted for Marketplace listing can no longer be distributed via installation link** —
+  which is why the Marketplace bonus is skipped: the install link is a judging requirement and the
+  listing is a bonus. Do not flip that order without cloning the app id.
 - `npm test` used to import only `engine.js`, so v4.3.0 shipped `resultNote is not defined`
   (the empty-state fix added the function, the import was dropped) with **24 tests green and a
   dead panel** — the probe found it, not the suite. `test/handlers.test.mjs` now calls `buildCard`
@@ -251,8 +276,10 @@ creating its batch, and would have destroyed both. Do not label them again.
 
 ## Open questions for Teemu
 
-- Should the demo project be seeded with a fictional team + tickets he is happy to show judges?
-- Marketplace listing: chase it (needs partner agreement + review) or skip and enter only the main + agent/MCP/TWG tracks?
+- **Teamwork Graph**: run the 45-minute spike (`docs/week-plan.md` §5) or ship as-is? Default if
+  silent: ship as-is; the entry already shows the receipts rule, the badge and the draft.
+- **Optional cheap win**: append the drafted ask to the radar comment, so a new ticket arrives with the
+  message already written (~30 min, no new scope, needs one eval re-run). Not built.
 
 ## MCP: what "zero config" actually costs (verified 2026-11-04)
 
@@ -267,20 +294,27 @@ Never call the app "zero config" in copy. Say "one admin toggle, then any MCP cl
 
 ## Devpost submission artifact — write this before the video, not after
 
-Draft lives in `docs/devpost.md` (tagline 114 chars, long description 586 words, tracks and
-checklist included). Fill the video URL and the access path, then paste.
+Draft lives in `docs/devpost.md`: tagline (114 chars), long description, "how it meets the technology
+requirement", bonus-prize selection, video/section copy and the checklist. `docs/week-plan.md` §1–4 is
+the step order; `JUDGES.md` is the testing instruction the rules require.
 
-- [ ] Tagline (one sentence, ≤140 chars) — must not claim AI judging until P4 lands
-- [ ] Long description: problem → product → receipts rule → how the tech requirement is met
-- [ ] Category: **Apps for Software Teams**
-- [ ] Bonus tracks claimed: MCP (yes) · Agents (only if the agent is filmed) · TWG (**cut**, EAP + allowlist) · Marketplace (**not claimed**)
+- [x] Tagline (114 chars), long description, tech-requirement blurb
+- [x] Category: **Apps for Software Teams**; bonus prizes **Agents + MCP** (one bonus per submission)
+- [ ] Installation link generated in the developer console (production 2.0.0 is already deployed) and
+      pasted into `JUDGES.md` + the Devpost Access field
 - [ ] Video URL (public YouTube, ≤5 min, front-load 2:50)
-- [ ] Install/access link, tested in a fresh incognito browser as a non-owner
-- [ ] Repo URL (make `KuosmTE/oncall-memory` public or grant access)
-- [ ] Fresh-site checklist: install → open issue → panel shows output → create issue → radar comment arrives
+- [ ] Repo public (`KuosmTE/oncall-memory`; checked private 2026-11-06)
+- [ ] Test the install link in incognito as a *second* site's admin: install → open issue → panel shows
+      output or the empty state → create issue → radar comment arrives
+- [ ] Teamwork Graph: optional 45-min spike in `docs/week-plan.md` §5 decides whether the claim flips
+- [ ] Submit by 2026-12-15 (slack), hard stop 2026-12-22 12:00 pm PT
 
 ## Open decisions (owner: Teemu)
 
-1. **Jira API token** in `.env` — blocks all seed data and therefore every measurement.
-2. **Teamwork Graph**: EAP + Atlassian support allowlist. Either send the request now (10 min) or drop the track. Default if silent: drop.
-3. **Forge LLM billing** — no free tier; the judge improvement assumes we accept cents-level billing.
+1. **Installation link** — the only remaining hard blocker; 25 minutes in the browser (`docs/week-plan.md` §1).
+2. **Record date** — the beats need one uninterrupted hour plus the MCP toggle. Everything else can wait.
+3. **TWG spike** — 45 minutes that decides between "ship as-is" and a graph-backed person context.
+
+Resolved: Jira API token (in `.env`), Forge LLM billing (accepted, cents per issue), TWG EAP/allowlist
+(gone — the API is in Preview since 2026-10-15), Marketplace (skipped: listing would block the install
+link).
