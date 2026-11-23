@@ -46,6 +46,11 @@ g. **Test it as a stranger**: incognito → the link → sign in as admin of a *
 If the form refuses to generate a link: the app must be in production (done), not paid, carry no
 license in the manifest (it does not), and not be submitted for Marketplace listing (it is not).
 
+**Freeze rule:** once the link is in the submission, do not deploy to production again unless you mean
+it. A new production version with new scopes makes every existing install (including a judge's) ask for
+re-consent, and a judge who hits an approval prompt mid-review may simply not. If the TWG spike lands,
+build and deploy it **before** the final link goes into the form, or after submission leave it alone.
+
 ## 2. Record the beats — 45 min
 
 `node tools/demo-preflight.mjs` first → must be **6/6 PASS**. Then follow `DEMO.md` → *Film-day run

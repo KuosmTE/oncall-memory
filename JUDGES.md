@@ -19,6 +19,10 @@ time: 2 minutes to install, 5 minutes to see everything.
 Open any Jira issue that has history — resolved issues in the same project, with assignees and
 comments — and look for **On-Call Memory** in the right-hand column, under the fields.
 
+If your site is brand new and has no history, create a project with sample data first (Projects →
+Create project → the "Mobile Dev" style sample): the app answers from *your* project's past, so a site
+with nothing resolved can only show the empty state.
+
 Expected: up to three people, each with `resolved` / `diagnosed` / `wrote up` receipts, an issue key
 and a date. When one person's evidence covers every matched issue, a
 `Single owner: … holds every receipt (n of n)` line appears, and a **Draft the ask** button sits under
