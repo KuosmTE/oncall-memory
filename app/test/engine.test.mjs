@@ -357,3 +357,28 @@ test("a receipt carrying a fix beats a fresher one without it", () => {
   ]);
   assert.equal(bestReceipt(p, items).receiptKey, "A-1", "the fix is the message's most concrete clause");
 });
+
+test("two people jointly holding every receipt is not a single owner", () => {
+  const people = rankPeople([
+    { person: "Alice Example", evidence: [ev("resolved", "A-1"), ev("resolved", "A-2")] },
+    { person: "Bob Example", evidence: [ev("wrote", "A-1"), ev("wrote", "A-2")] },
+  ]);
+  assert.equal(people.length, 2, "both are full covers");
+  assert.equal(busFactor([{ key: "A-1" }, { key: "A-2" }], people), null);
+});
+
+test("a receipt held by someone further down the ranking blocks the badge", () => {
+  const people = rankPeople([
+    { person: "Alice Example", evidence: [ev("resolved", "B-1"), ev("resolved", "B-2")] },
+    { person: "Dave Example", evidence: [ev("diagnosed", "B-3")] },
+  ]);
+  assert.equal(busFactor([{ key: "B-1" }, { key: "B-2" }, { key: "B-3" }], people), null,
+    "the union of receipts includes B-3, which the top person does not hold");
+});
+
+test("the note does not claim a project scope it never used", () => {
+  assert.equal(resultNote([], 0, false), "No resolved issue shares vocabulary with this ticket.");
+  assert.equal(resultNote([{ key: "A" }], 3, false), "Checked the 3 most recent resolved matches.");
+  assert.equal(resultNote([{ key: "A" }], 1, false), "Checked the 1 most recent resolved match.");
+  assert.match(resultNote([], 7, false), /^Checked the 7 most recent resolved matches — none looked like this\.$/);
+});

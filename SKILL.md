@@ -39,3 +39,5 @@ Connected apps → On-Call Memory → Tools.
   receipt: which issue, which kind of work, which date.
 - If the tools return nothing, say there are no receipts and what was searched. An empty answer with a
   scope is worth more than a plausible guess.
+- If you have no issue key, call `has-happened-before` with the user's text first, then pass a key it
+  returned to `who-knows`. `who-knows` does not accept a free-text description.

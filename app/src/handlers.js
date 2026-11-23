@@ -215,12 +215,19 @@ export async function buildCard({ issueKey, text } = {}, mode = "user") {
     add(byPerson, m.wroteBy, "wrote", m.key, m.wroteAt);
   }
 
+  const rows = [...byPerson.values()];
+  const people = rankPeople(rows, 3);
+  // P6a: the badge is a claim about *every* receipt holder, so it is computed from all rows —
+  // ranking truncation to three must not hide a fourth person who holds one of the keys.
+  const singleOwner = busFactorText(busFactor(items, rankPeople(rows, rows.length)));
+
   return {
     subject,
     items,
-    people: rankPeople([...byPerson.values()], 3),
+    people,
+    singleOwner,
     confidence: confidence(items),
-    note: resultNote(items, issues.length),
+    note: resultNote(items, issues.length, Boolean(projectKey)),
   };
 }
 
@@ -253,7 +260,7 @@ function commentBody(card) {
     ? [`Ask: ${card.people.map((p) => `${p.person} (${receiptsText(p)})`).join(" · ")}`]
     : [];
   // P6a: only when the badge exists — a sentence that fires on every issue would be noise.
-  const owner = busFactorText(busFactor(card.items, card.people));
+  const owner = card.singleOwner;
 
   return {
     type: "doc",
