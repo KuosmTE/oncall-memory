@@ -44,8 +44,8 @@ npm run forge:deploy          # builds the panel bundle first — never call for
 npx forge install --demo-site --product Jira -e development --non-interactive --confirm-scopes --upgrade
 cd .. && node tools/demo-preflight.mjs        # 6/6 PASS = the film-day state is still true
 cd .. && node tools/panel-probe.mjs MOBL-69   # the panel's resolver JSON, without a browser
-cd app && npx forge deploy -e production      # judges install from the production deploy; sharing
-                                              # lives at .../myapps/<appId>/manage/distribution
+cd app && npm run forge:deploy -- -e production   # builds the panel first; judges install from prod
+                                              # sharing lives at .../myapps/<appId>/manage/distribution
 ```
 
 ## Architecture
@@ -126,6 +126,34 @@ Entry log line in `onIssueCreated` means "no comment" can be told apart from "ne
    points at Teemu on all seeded issues and he outranks the sample team — accurate, weak on
    camera. Re-attributing the resolution transitions in `tools/seed-incidents.py` is the fix if
    we want a teammate on top.
+
+## Review round 2 (architect, t_94fbf920, 2026-11-23) — fixed in 5.0.0
+
+Read-only review of `main` at 45bb050: **1 blocker, 4 should-fix, 5 nice-to-have**, every claim
+verified by execution. Fixed:
+
+- **🔴 Panel receipt links were dead clicks.** The Custom UI iframe sandbox has no `allow-popups`, so
+  `target="_blank"` is blocked, and a relative `/browse/KEY` href resolves against the CDN origin, not
+  the Jira site. `issueLink` now calls `router.open()` (present in `@forge/bridge` 7.2.1). This broke
+  DEMO beat 0:40 and the "key you can click" promise in JUDGES.md — the beat is filmable again, but a
+  human click is the only test for it.
+- **🟡 `busFactor` fired on joint ownership.** It only checked `people[0]`; if Alice resolved and Bob
+  closed every match, both held every receipt and the badge still said "Single owner: Alice". Owners
+  are now counted across everyone and exactly one is required.
+- **🟡 The badge's coverage union came from the top-3 rows.** A 4th-ranked receipt holder was invisible,
+  so `(2 of 2)` could be printed while a third receipt existed. The badge is now computed in `buildCard`
+  from every receipt holder and travels as `card.singleOwner`; resolver and radar read that field.
+- **🟡 `resultNote` claimed "in this project" for free-text searches**, which have no project scope. The
+  note takes the scope as a parameter, and PRIVACY.md states the same distinction.
+- **🟡 The scripted MCP question asked for a description** ("the checkout rollback in MOBL"), but
+  `who-knows` requires an issue key. Beat now uses MOBL-122; `SKILL.md` documents the two-step fallback
+  (`has-happened-before` with text → take a key → `who-knows`).
+- 🔵 Fixture comment about `route` encoding corrected (the real SDK *does* encode), DEMO's "watch past
+  3" corrected to five minutes, and the production deploy command now goes through
+  `npm run forge:deploy --` so a stale panel can never be shipped.
+
+Sound and left alone: engine purity, manifest/module hygiene, trigger identity (`asApp`), JQL injection
+defences, resolver/frontend contract, the contest-facts docs, and production 2.0.0 carrying P6a.
 
 ## Gotchas that cost real time
 

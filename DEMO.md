@@ -31,7 +31,7 @@ from that one project.
 
 ## Hard constraints
 
-- **≤ 5 min total, but judges are not required to watch past 3.** Front-load.
+- **≤ 5 min total, and judges are not required to watch beyond five minutes.** Front-load.
 - **Public on YouTube.** Upload one throwaway 10s clip **unlisted** in week 4 — that
   proves the channel and the upload path work before deadline week.
 - **No third-party trademarks, no copyrighted music.** Silence or a generated bed only.
@@ -100,7 +100,7 @@ make the cut trivial and let one bad beat be redone without losing the rest.
 | 0:55 ask (after P6a) | `raw-P6-ask.mp4` | Back on MOBL-122, click **Draft the ask** under the top person | The message with the person, the query key, the receipt key and the fix, ready to send |
 | 1:10 radar | `raw-P6-radar.mp4` | Create → project MOBL → summary "Checkout failing again after this morning's build" → Create, then open the new issue and wait | The radar comment arriving with the previous fix and who to ask (≤ 3 min platform lag — keep the take long or cut after it lands) |
 | 1:50 agent | `raw-P5-agent.mp4` ✅ | Already recorded | Agent name, question, cited MOBL-70/71/74 |
-| 2:30 outside | `raw-P6-mcp.mp4` | 3 s on the admin toggle, then the terminal: `claude mcp add --transport http oncall https://mcp.atlassian.com/forge/d0c1b623-3512-4219-8760-0b15e2bd80b2` → connect → ask "who should I ask about the checkout rollback in MOBL" | The same answer from outside Atlassian, with the tool call visible |
+| 2:30 outside | `raw-P6-mcp.mp4` | 3 s on the admin toggle, then the terminal: `claude mcp add --transport http oncall https://mcp.atlassian.com/forge/d0c1b623-3512-4219-8760-0b15e2bd80b2` → connect → ask "Who should I ask about MOBL-122?" (`who-knows` takes an issue key, not a description — see SKILL.md) | The same answer from outside Atlassian, with the tool call visible |
 | 2:50 line | — | Text card or VO only | "Read-only except one comment. One admin toggle. Install link in the description." |
 
 ### Rules that keep it honest on camera

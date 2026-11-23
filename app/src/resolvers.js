@@ -1,6 +1,6 @@
 // Resolver for the issue panel. One engine call, plain props out; the UI stays dumb.
 import { buildCard } from "./handlers.js";
-import { askDraft, bestReceipt, busFactor, busFactorText, verdict } from "./engine.js";
+import { askDraft, bestReceipt, verdict } from "./engine.js";
 
 export async function panelData(payload) {
   const issueKey =
@@ -56,7 +56,7 @@ export async function panelData(payload) {
         // P6b: { open, more } from the Teamwork Graph, or null when the graph gave no answer.
         open: p.open || null,
       })),
-      singleOwner: busFactorText(busFactor(card.items, card.people)),
+      singleOwner: card.singleOwner,
       draft,
       note: card.note,
     };

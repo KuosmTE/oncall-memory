@@ -6,8 +6,9 @@ of one issue plus up to five candidate summaries, sent to Atlassian's own Forge 
 ## What the app reads
 
 - The issue the panel is open on: summary, description, project key.
-- Jira search results in that project: summary, description, resolution, resolution date, assignee,
-  comments, status — read-only, under the `read:jira-work` scope.
+- Jira search results: summary, description, resolution, resolution date, assignee, comments, status
+  — read-only, under the `read:jira-work` scope. The panel scopes the search to the issue's own
+  project; a free-text request from the actions or MCP searches the whole site.
 - The changelog of up to five matched issues, to find the resolution transition.
 
 ## What leaves the site

@@ -6086,7 +6086,14 @@ Please see https://iframe-resizer.com/upgrade for more details.
     for (const c of children) node.append(c?.nodeType ? c : document.createTextNode(String(c)));
     return node;
   }
-  var issueLink = (key) => h("a", { class: "key", href: `/browse/${key}`, target: "_blank", rel: "noopener" }, key);
+  var issueLink = (key) => {
+    const a = h("a", { class: "key", href: `/browse/${key}` }, key);
+    a.addEventListener("click", (e) => {
+      e.preventDefault();
+      import_bridge.router.open(`/browse/${key}`);
+    });
+    return a;
+  };
   function section(title, rows) {
     return h("section", {}, h("h2", {}, title), ...rows);
   }

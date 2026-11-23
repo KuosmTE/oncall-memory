@@ -231,19 +231,23 @@ export function applyJudgement(items, verdicts) {
 /**
  * The line under the card. The empty state is the most-screenshotted thing in the demo,
  * so "among the 0 most recent matches" is not allowed to exist.
+ * `inProject` matters: a free-text search has no project scope, and the note is the app's
+ * own statement of what it searched — it must not claim a narrower scope than it used.
  */
-export function resultNote(items, scanned) {
-  if (items.length) return `Checked the ${scanned} most recent resolved match${scanned === 1 ? "" : "es"} in this project.`;
-  if (scanned === 0) return "No resolved issue in this project shares vocabulary with this ticket.";
+export function resultNote(items, scanned, inProject = true) {
+  const where = inProject ? " in this project" : "";
+  if (items.length) return `Checked the ${scanned} most recent resolved match${scanned === 1 ? "" : "es"}${where}.`;
+  if (scanned === 0) return `No resolved issue${where} shares vocabulary with this ticket.`;
   return `Checked the ${scanned} most recent resolved matches — none looked like this.`;
 }
 
 // --- P6a: single-owner badge + the ask draft (presentation only) -------------------
 
 /**
- * The same receipts, read as a risk. When one person's evidence covers every matched
- * issue that carries any receipt, say so — but only from 2 matched issues up, and only at
- * 100 % coverage; a badge that fires everywhere is noise, not a finding (SPEC §13).
+ * The same receipts, read as a risk. When exactly ONE person's evidence covers every matched
+ * issue that carries any receipt, say so — from 2 matched issues up, and only at 100 % coverage.
+ * Owners are counted across everyone, not just the top row: if two people jointly hold every
+ * receipt there is no single owner, and a badge that fires everywhere is noise (SPEC §13).
  * Returns { person, issues, of } or null.
  */
 export function busFactor(items, people) {
@@ -255,11 +259,10 @@ export function busFactor(items, people) {
   const covered = (items || []).filter((i) => i?.key && all.has(i.key)).map((i) => i.key);
   if (covered.length < 2) return null;
 
-  const top = (people || [])[0];
-  const mine = new Set((top?.evidence || []).map((e) => e?.issueKey).filter(Boolean));
-  const issues = covered.filter((k) => mine.has(k)).length;
-  if (!top?.person || issues !== covered.length) return null;
-  return { person: top.person, issues, of: covered.length };
+  const keysOf = (p) => new Set((p?.evidence || []).map((e) => e?.issueKey).filter(Boolean));
+  const owners = (people || []).filter((p) => p?.person && covered.every((k) => keysOf(p).has(k)));
+  if (owners.length !== 1) return null;
+  return { person: owners[0].person, issues: covered.length, of: covered.length };
 }
 
 /** The badge as one sentence; the panel and the radar comment print the same string. */

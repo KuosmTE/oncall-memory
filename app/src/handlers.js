@@ -258,16 +258,21 @@ export async function buildCard({ issueKey, text } = {}, mode = "user") {
     noteId(m.wroteBy, m.wroteById);
   }
 
-  const people = rankPeople([...byPerson.values()], 3);
+  const rows = [...byPerson.values()];
+  const people = rankPeople(rows, 3);
   // P6b: current load for the people about to be recommended — one graph call each, in parallel.
   const loads = await Promise.all(people.map((p) => openItems(idByName.get(p.person), mode)));
+  // P6a: the badge is a claim about *every* receipt holder, so it is computed from all rows —
+  // ranking truncation to three must not hide a fourth person who holds one of the keys.
+  const singleOwner = busFactorText(busFactor(items, rankPeople(rows, rows.length)));
 
   return {
     subject,
     items,
     people: people.map((p, i) => ({ ...p, open: loads[i] })),
+    singleOwner,
     confidence: confidence(items),
-    note: resultNote(items, issues.length),
+    note: resultNote(items, issues.length, Boolean(projectKey)),
   };
 }
 
@@ -300,7 +305,7 @@ function commentBody(card) {
     ? [`Ask: ${card.people.map((p) => `${p.person} (${receiptsText(p)})`).join(" · ")}`]
     : [];
   // P6a: only when the badge exists — a sentence that fires on every issue would be noise.
-  const owner = busFactorText(busFactor(card.items, card.people));
+  const owner = card.singleOwner;
 
   return {
     type: "doc",

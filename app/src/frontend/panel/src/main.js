@@ -1,5 +1,5 @@
 // Custom UI panel. Plain DOM, no framework: the resolver already shaped the data.
-import { invoke } from "@forge/bridge";
+import { invoke, router } from "@forge/bridge";
 import { KIND_LABEL, workloadLine } from "../../../engine.js";
 
 const app = document.getElementById("app");
@@ -16,8 +16,17 @@ function h(tag, props = {}, ...children) {
   return node;
 }
 
-const issueLink = (key) =>
-  h("a", { class: "key", href: `/browse/${key}`, target: "_blank", rel: "noopener" }, key);
+const issueLink = (key) => {
+  // A plain <a href="/browse/KEY"> cannot work inside the Custom UI iframe: the sandbox has no
+  // allow-popups (so target=_blank is blocked) and a relative href resolves against the CDN
+  // origin, not the Jira site. router.open is the only route that lands on the issue.
+  const a = h("a", { class: "key", href: `/browse/${key}` }, key);
+  a.addEventListener("click", (e) => {
+    e.preventDefault();
+    router.open(`/browse/${key}`);
+  });
+  return a;
+};
 
 function section(title, rows) {
   return h("section", {}, h("h2", {}, title), ...rows);

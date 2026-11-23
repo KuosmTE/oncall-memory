@@ -65,7 +65,9 @@ const client = {
 
 export default { asApp: () => client, asUser: () => client, fetch };
 
-/** Forge's route tag concatenates; it does not encode. Mirrored exactly. */
+/** Forge's `route` tag: in the real SDK this encodes every interpolated query value
+ * (safeUrl.js calls encodeURIComponent). This mirror concatenates so a probe's URL matches
+ * the fixture regexes; do not read it as "nothing encodes downstream". */
 export function route(strings, ...values) {
   return strings.reduce((out, s, i) => out + s + (i < values.length ? String(values[i]) : ""), "");
 }
