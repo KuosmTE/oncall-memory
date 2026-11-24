@@ -77,11 +77,12 @@ make the cut trivial and let one bad beat be redone without losing the rest.
 1. `oncall-eval` fixtures out of the way: there are none right now, and if a fresh eval left a
    batch, delete it (`project = MOBL AND labels = oncall-eval`) — MOBL-122/127 no longer carry the
    label, so they cannot be swept by mistake.
-2. **Panel**: open MOBL-122 and scroll the right column past **Automation**. The **On-Call
-   Memory** card sits below the field sections; it must show three people with kinds and dates,
-   then the line `Single owner: Teemu Kuosmanen holds every receipt (5 of 5).` and the
-   **Draft the ask** button under the top person.
-   *If that card is not there, stop — that is a bug to fix before filming, not a filming problem.*
+2. **Panel**: open MOBL-122, then **View app actions** (the button on the row above **Activity**)
+   → **On-Call Memory**. The panel renders above Activity with a `DEV` badge; it must show three
+   people with labelled receipts, the `Single owner: …` line and the **Draft the ask** button.
+   *Jira does not embed app panels in the right column: until someone clicks that menu item the
+   app's resolver never runs and no log line appears. If the card is missing after clicking, that
+   is a bug to fix before filming, not a filming problem.*
 3. **Agent**: Rovo chat → **Change agent** → search `On-Call` → **On-Call Memory**; dismiss the
    "Try Rovo on your phone" promo card (it covers the answer).
 4. **MCP**: admin toggle ON (Atlassian Admin → Apps → Sites → one-atlas-boys → Connected apps →
@@ -95,7 +96,7 @@ make the cut trivial and let one bad beat be redone without losing the rest.
 | Beat | File | Do exactly this | Must be on screen |
 |---|---|---|---|
 | 0:00 pain | `raw-P6-pain.mp4` | Jira search, JQL `project = MOBL AND text ~ "checkout broken" ORDER BY created DESC` | A wall of 20+ near-identical resolved tickets and no name to ask |
-| 0:20 panel | `raw-P6-panel.mp4` | Open MOBL-122 (scroll the right column to the On-Call Memory card) | Three names, each with `resolved` / `diagnosed` / `wrote up`, key and date — then the `Single owner: …` line |
+| 0:20 panel | `raw-P6-panel.mp4` | Open MOBL-122 → **View app actions** → **On-Call Memory** (the panel is a menu item in the new issue view, not a sidebar section) | Three names, each with `resolved` / `diagnosed` / `wrote up`, key and date — then the `Single owner: …` line |
 | 0:40 receipt | `raw-P6-receipt.mp4` | Click the receipt key on the first person (MOBL-74) | The issue that proves it: its summary, assignee, and the fix comment |
 | 0:55 ask (after P6a) | `raw-P6-ask.mp4` | Back on MOBL-122, click **Draft the ask** under the top person | The message with the person, the query key, the receipt key and the fix, ready to send |
 | 1:10 radar | `raw-P6-radar.mp4` | Create → project MOBL → summary "Checkout failing again after this morning's build" → Create, then open the new issue and wait | The radar comment arriving with the previous fix and who to ask (≤ 3 min platform lag — keep the take long or cut after it lands) |

@@ -57,18 +57,16 @@ build and deploy it **before** the final link goes into the form, or after submi
 
 `node tools/demo-preflight.mjs` first → must be **6/6 PASS**.
 
-Then the **panel smoke test, three clicks** (this is the only part no script can check, and it is what
-the 0:40 beat depends on):
+Then the **panel smoke test, four checks** (no script can check inside the Forge iframe, and this is
+what the 0:20–0:55 beats depend on):
 
-1. Open MOBL-122 → the card shows three people with labelled receipts.
-2. **Click a receipt key** (e.g. `MOBL-70`) → the issue must open in a new tab. If nothing happens, the
-   `router.open` fix regressed and the beat cannot be filmed.
-3. Click **Draft the ask** → the message block appears under the top person.
-
-Each name should also carry a `· N open items` tail from the Teamwork Graph (the P6b build —
-`development` 5.1.0 today, production once it is deployed). If the number is missing, the graph
-returned nothing for that person — the card is still correct, but say the sentence out loud only if
-the number is on screen.
+1. Open MOBL-122 → **View app actions** → **On-Call Memory**. The panel appears above Activity with
+   a `DEV` badge. This is a menu item, not a sidebar section — until it is clicked the app never runs.
+2. The card shows three people with labelled receipts, the `Single owner: …` line and the
+   **Draft the ask** button.
+3. **Click a receipt key** (e.g. `MOBL-70`) → the issue opens in a new tab. If nothing happens, the
+   `router.open` fix regressed and the 0:40 beat cannot be filmed.
+4. Click **Draft the ask** → the message block appears under the top person.
 
 Then follow `DEMO.md` → *Film-day run sheet*: one file per beat into `~/Videos/oncall-raw/`. The only
 human-only prep there is the MCP toggle (step 3 of the weekend run book).

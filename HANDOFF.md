@@ -11,7 +11,7 @@ Read this first in a fresh session. Then `SPEC.md` (product) and `DEMO.md` (film
 | App id | `ari:cloud:ecosystem::app/d0c1b623-3512-4219-8760-0b15e2bd80b2` |
 | Developer Space | Minttu Labs (account: teemu.kuosm@gmail.com) — **rename to `bittisorvi.org`** in the console: that string is what the install page shows as the provider |
 | Live site | `https://one-atlas-boys.atlassian.net` (Forge demo site, ~90 days) |
-| Deployed | `development` version **4.6.0**, installed in Jira on the demo site · **production version 2.0.0** (2026-11-23, prerequisite for the judges' installation link) |
+| Deployed | `development` **major 6** (2026-11-24: review fixes, Teamwork Graph scopes removed) · **production major 2** (2026-11-24: review fixes + P6a; this is what the judges' install link will serve) — `forge deploy list` prints majors, not minors |
 | Credentials | `/opt/workspace/codegeist/.env` (`FORGE_EMAIL`, `FORGE_API_TOKEN`, chmod 600) |
 | Deadline | **2026-12-22 22:00 EET** (Devpost submission) |
 | Milestones | P3 data+eval **Nov 14** · P4 LLM judge+evidence **Nov 28** · P5 agent filmed **Dec 8 (hard gate)** · video cut **Dec 15** · submit **Dec 20** |
@@ -155,7 +155,27 @@ verified by execution. Fixed:
 Sound and left alone: engine purity, manifest/module hygiene, trigger identity (`asApp`), JQL injection
 defences, resolver/frontend contract, the contest-facts docs, and production 2.0.0 carrying P6a.
 
+## P6b — Teamwork Graph load: probed, parked (2026-11-24)
+
+Built to SPEC §13's "what is this person carrying now" idea, using the curated
+`atlassianUserAssignedJiraWorkItems` query. It works: live panel, `edges=4` for Cassi Owens,
+`errors=0`, and the consent for `read:graph:issue:jira` + `read:graph:user:atlassian` went through
+without a browser prompt. It is **not shipped**, because every assigned item in the sample corpus is
+in the Done category, so every person renders `0 open items` — honest, but worth nothing on camera
+and worth two extra permission prompts for a judge.
+
+Kept on branch `feat/twg-workload` (worktree `/opt/workspace/tmp/cg-twg`) together with temporary
+`panel diag` / `twg raw` log lines; `main` carries no graph scopes. If a future corpus has open
+assigned work, resurrecting it is a manifest hunk plus the same panel line.
+
 ## Gotchas that cost real time
+
+- **`jira:issuePanel` is not a sidebar section.** In the new issue view the panel is added from
+  **View app actions → <panel title>**, and only then does the app's resolver run — before that
+  click there is no iframe, no log line, nothing. Every "the panel is proven" claim before
+  2026-11-24 rested on `tools/panel-probe.mjs` JSON, because nobody had clicked that menu item.
+  The first live look (via a browser session Teemu opened) showed the card, the badge and the draft
+  working exactly as designed. The film beats must show the click itself.
 
 - Handler paths resolve **under `src/`**: `handlers.whoKnows`, never `src/handlers.whoKnows`. The lint error claims the file is missing when it is not.
 - First-run analytics prompt kills every non-TTY command: `forge settings set usage-analytics false`.
