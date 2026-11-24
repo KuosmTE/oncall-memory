@@ -1,7 +1,6 @@
 // Resolver for the issue panel. One engine call, plain props out; the UI stays dumb.
 import { buildCard } from "./handlers.js";
-import { askDraft, bestReceipt, verdict } from "./engine.js";
-
+import { cardAsk, verdict } from "./engine.js";
 export async function panelData(payload) {
   const issueKey =
     payload?.context?.extension?.issue?.key ||
@@ -15,18 +14,8 @@ export async function panelData(payload) {
   try {
     const card = await buildCard({ issueKey }, "user");
     // P6a: the badge reads the same receipts as risk; the draft is the message for the top person.
-    const receipt = card.people[0] ? bestReceipt(card.people[0], card.items) : null;
-    const draft = receipt && card.subject?.key
-      ? askDraft({
-        key: card.subject.key,
-        summary: card.subject.summary,
-        person: card.people[0].person,
-        receiptKey: receipt.receiptKey,
-        receiptDate: receipt.receiptDate ? receipt.receiptDate.slice(0, 10) : null,
-        fix: receipt.fix,
-        receiptKind: receipt.receiptKind,
-      })
-      : null;
+    // Same helper the radar comment uses, so the two surfaces cannot disagree.
+    const draft = cardAsk(card);
 
     return {
       ok: true,

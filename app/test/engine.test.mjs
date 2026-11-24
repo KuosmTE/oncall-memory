@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { applyJudgement, askDraft, bestReceipt, busFactor, busFactorText, confidence, contentText, jqlTextClause, judgeMessages, KIND_LABEL, parseJudgement, rankCandidates, rankPeople, receiptText, receiptsText, resultNote, toJqlText, tokens, verdict } from "../src/engine.js";
+import { applyJudgement, askDraft, bestReceipt, busFactor, busFactorText, cardAsk, confidence, contentText, jqlTextClause, judgeMessages, KIND_LABEL, parseJudgement, rankCandidates, rankPeople, receiptText, receiptsText, resultNote, toJqlText, tokens, verdict } from "../src/engine.js";
 
 // Fixtures mirror the real failure: many issues mention "timeout", three are the same bug.
 const candidates = [
@@ -381,4 +381,20 @@ test("the note does not claim a project scope it never used", () => {
   assert.equal(resultNote([{ key: "A" }], 3, false), "Checked the 3 most recent resolved matches.");
   assert.equal(resultNote([{ key: "A" }], 1, false), "Checked the 1 most recent resolved match.");
   assert.match(resultNote([], 7, false), /^Checked the 7 most recent resolved matches — none looked like this\.$/);
+});
+
+test("the ask is built from a whole card, so the panel and the radar cannot disagree", () => {
+  const card = {
+    subject: { key: "MOBL-122", summary: "We rolled the release back, checkout was broken" },
+    items: [{ key: "MOBL-70", lastFix: "Reverted 4.18.0", resolvedAt: "2026-11-04T10:00:00.000+0000" }],
+    people: rankPeople([
+      { person: "Teemu Kuosmanen", evidence: [ev("wrote", "MOBL-70", "2026-11-04T10:05:00.000+0000")] },
+    ]),
+  };
+  assert.equal(
+    cardAsk(card),
+    'Hi Teemu Kuosmanen — MOBL-122 ("We rolled the release back, checkout was broken") looks like MOBL-70, which you closed on 2026-11-04: "Reverted 4.18.0". Could you take a look?'
+  );
+  assert.equal(cardAsk({ ...card, people: [] }), null, "no person, no ask");
+  assert.equal(cardAsk({ ...card, subject: { key: null, summary: "" } }), null, "no subject key, no ask");
 });

@@ -328,7 +328,23 @@ Evidence (2026-11-06, all against the live site):
   each opened the right ticket, so the `router.open` fix works inside the live iframe and DEMO
   beat 0:40 is filmable. The panel is now the best-evidenced part of the app.
 
-The eval batch (**MOBL-130…142**) was deleted after measuring, so the board is again 27 seeded
+**P6a#2 — the ask arrives with the radar comment (2026-11-24).** `cardAsk(card)` in `engine.js` is now
+the single builder of the drafted message: the panel resolver and `commentBody` both call it, so the
+button and the comment cannot disagree. The comment gains the sentence as its last paragraph, only
+when there is a person and a receipt. Live proof from the eval run (`MOBL-144`):
+
+> … Single owner: Teemu Kuosmanen holds every receipt (2 of 2). Hi Teemu Kuosmanen — MOBL-144
+> ("Checkout falls over at peak again") looks like MOBL-58, which you closed on 2026-11-04: "Raised
+> the Redis connection pool to 200 and put a p99 alert at one second. Queueing stopped within
+> minutes.". Could you take a look?
+
+Tests 42 → 44 (card-level ask + comment tail). **Eval after the change: 10/10 top-3 · 0/3 controls**
+(`tools/eval-20261124.json`) — the comment shape changed, retrieval did not. Known nit: when the fix
+text already ends in a period the quoted fix ends `.".`; one line in `askDraft`
+(`fix.replace(/[.\s]+$/, "")`) fixes it, but production is the build this eval measured, so it waits
+for a deliberate deploy. Deployed to `development` and `production` after the change, no new scopes.
+
+The eval batch (**MOBL-144…156**) was deleted after measuring, so the board is again 27 seeded
 incidents + **MOBL-122** (demo question) + **MOBL-127** (honest-empty control). The two demo issues
 **no longer carry the `oncall-eval` label** — the eval deletes every issue with that label before
 creating its batch, and would have destroyed both. Do not label them again.

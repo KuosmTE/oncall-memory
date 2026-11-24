@@ -10,6 +10,7 @@ import {
   applyJudgement,
   busFactor,
   busFactorText,
+  cardAsk,
   confidence,
   contentText,
   jqlTextClause,
@@ -243,8 +244,9 @@ export async function memoryCard(payload) {
   return { items: card.items, confidence: card.confidence, note: card.note };
 }
 
-/** ADF for the radar comment: the fixes, who owns / closed them, who to ask, and the risk line. */
-function commentBody(card) {
+/** ADF for the radar comment: the fixes, who owns / closed them, who to ask, the risk line,
+ * and the message already drafted — so the comment is the next action, not a notification. */
+export function commentBody(card) {
   const bullets = card.items.slice(0, 3).map((i) => ({
     type: "listItem",
     content: [{
@@ -261,6 +263,7 @@ function commentBody(card) {
     : [];
   // P6a: only when the badge exists — a sentence that fires on every issue would be noise.
   const owner = card.singleOwner;
+  const ask = cardAsk(card);
 
   return {
     type: "doc",
@@ -270,6 +273,7 @@ function commentBody(card) {
       { type: "bulletList", content: bullets },
       ...(people.length ? [{ type: "paragraph", content: [{ type: "text", text: people[0] }] }] : []),
       ...(owner ? [{ type: "paragraph", content: [{ type: "text", text: owner }] }] : []),
+      ...(ask ? [{ type: "paragraph", content: [{ type: "text", text: ask }] }] : []),
     ],
   };
 }

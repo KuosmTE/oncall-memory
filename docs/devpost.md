@@ -19,7 +19,8 @@ issue was resolved, who wrote the comment explaining the fix, who moved it to Do
 
 **What it does.** Open an issue and a panel names up to three people who have solved that kind of
 problem, each with the issue key, the date, and the kind of work they did there. Create an issue and
-a comment arrives with the previous fix and who to ask. Ask the Rovo agent the same question in chat
+a comment arrives with the previous fix, who to ask, and **the message already drafted** — the
+comment is the next action, not a notification. Ask the Rovo agent the same question in chat
 and it answers with the same keys. The same two actions are exposed as MCP tools, so other clients
 can ask it too.
 

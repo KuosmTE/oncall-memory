@@ -39,6 +39,20 @@ test("buildCard returns a card with a note and one receipt per evidence kind", a
   assert.deepEqual(card.subject, { key: "Q-1", summary: "Redis connection pool exhausted after deploy" });
 });
 
+test("the radar comment ends with the drafted ask", async () => {
+  const { buildCard, commentBody } = await import("../src/handlers.js");
+  const card = await buildCard({ issueKey: "Q-1" });
+  const body = commentBody(card);
+  const paragraphs = body.content
+    .filter((n) => n.type === "paragraph")
+    .map((n) => n.content.map((c) => c.text).join(""));
+  assert.equal(
+    paragraphs.at(-1),
+    'Hi Ada Lovelace — Q-1 ("Redis connection pool exhausted after deploy") looks like Q-2, which you resolved on 2026-10-01: "Raised the pool max, timeouts stopped". Could you take a look?'
+  );
+  assert.ok(!paragraphs.some((p) => p.startsWith("Single owner")), "one matched issue: no badge");
+});
+
 test("buildCard says 'nothing to search on' instead of querying an empty ticket", async () => {
   const { buildCard } = await import("../src/handlers.js");
   const card = await buildCard({});

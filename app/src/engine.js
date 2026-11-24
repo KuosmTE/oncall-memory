@@ -318,3 +318,23 @@ export function askDraft({ key, summary, person, receiptKey, receiptDate, fix, r
   const about = summary ? `${key} ("${summary}")` : key;
   return `Hi ${person} — ${about} looks like ${clause}. Could you take a look?`;
 }
+
+/**
+ * The ask for a whole card: the top person, their best receipt and the card's own subject.
+ * One function so the panel button and the radar comment can never produce different messages.
+ */
+export function cardAsk(card) {
+  const person = card?.people?.[0];
+  const receipt = bestReceipt(person, card?.items);
+  const key = card?.subject?.key;
+  if (!person?.person || !receipt || !key) return null;
+  return askDraft({
+    key,
+    summary: card.subject.summary || "",
+    person: person.person,
+    receiptKey: receipt.receiptKey,
+    receiptDate: receipt.receiptDate ? String(receipt.receiptDate).slice(0, 10) : null,
+    fix: receipt.fix,
+    receiptKind: receipt.receiptKind,
+  });
+}
