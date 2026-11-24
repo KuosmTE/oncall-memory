@@ -338,14 +338,14 @@ when there is a person and a receipt. Live proof from the eval run (`MOBL-144`):
 > the Redis connection pool to 200 and put a p99 alert at one second. Queueing stopped within
 > minutes.". Could you take a look?
 
-Tests 42 → 44 (card-level ask + comment tail). **Eval after the change: 10/10 top-3 · 0/3 controls**
-(`tools/eval-20261124.json`) — the comment shape changed, retrieval did not. Known nit: when the fix
-text already ends in a period the quoted fix ends `.".`; one line in `askDraft`
-(`fix.replace(/[.\s]+$/, "")`) fixes it, but production is the build this eval measured, so it waits
-for a deliberate deploy. Deployed to `development` and `production` after the change, no new scopes.
+Tests 44 → 45 (card-level ask, comment tail, and the trailing-period case). **Eval after both
+changes: 10/10 top-3 · 0/3 controls** (`tools/eval-20261124.json`, re-run on the final build, so the
+measured build is the live build). Deployed to `development` and `production`; no new scopes. The
+trailing-period trim (`askDraft` drops a final `.` before quoting the fix) landed before that eval.
 
-The eval batch (**MOBL-144…156**) was deleted after measuring, so the board is again 27 seeded
-incidents + **MOBL-122** (demo question) + **MOBL-127** (honest-empty control). The two demo issues
+The eval batch (**MOBL-157…169**, second run) was deleted after measuring, so the board is again 27
+seeded incidents + **MOBL-122** (demo question) + **MOBL-127** (honest-empty control). The two demo
+issues
 **no longer carry the `oncall-eval` label** — the eval deletes every issue with that label before
 creating its batch, and would have destroyed both. Do not label them again.
 

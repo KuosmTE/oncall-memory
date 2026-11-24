@@ -309,6 +309,12 @@ test("a missing date drops the date clause and keeps the fix", () => {
   );
 });
 
+test("a fix that already ends in a period does not double it", () => {
+  const text = askDraft({ ...ASK, fix: "Raised the pool max." });
+  assert.ok(text.includes(': "Raised the pool max".'), text);
+  assert.ok(!text.includes('.".'), "no `.\".` inside the sentence");
+});
+
 test("the draft names no issue key but the query and its receipt", () => {
   assert.deepEqual(askDraft(ASK).match(/[A-Z]+-[0-9]+/g), ["MOBL-122", "MOBL-74"]);
 });

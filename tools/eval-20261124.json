@@ -1,29 +1,29 @@
 {
   "eval": "oncall-memory live radar \u2014 top-3 recall + control false positives",
-  "run_at": "2026-11-24T06:23:56+00:00",
+  "run_at": "2026-11-24T06:43:52+00:00",
   "site": "https://one-atlas-boys.atlassian.net",
   "project": "MOBL",
   "pairs_file": "eval-pairs.json",
   "query_issues": {
-    "redis-peak": "MOBL-144",
-    "redis-504": "MOBL-145",
-    "redis-queue": "MOBL-146",
-    "deploy-5xx": "MOBL-147",
-    "deploy-dupes": "MOBL-148",
-    "deploy-rollback": "MOBL-149",
-    "disk-full": "MOBL-150",
-    "disk-logs": "MOBL-151",
-    "auth-401": "MOBL-152",
-    "auth-sync": "MOBL-153",
-    "ctrl-icon": "MOBL-154",
-    "ctrl-a11y": "MOBL-155",
-    "ctrl-retro": "MOBL-156"
+    "redis-peak": "MOBL-157",
+    "redis-504": "MOBL-158",
+    "redis-queue": "MOBL-159",
+    "deploy-5xx": "MOBL-160",
+    "deploy-dupes": "MOBL-161",
+    "deploy-rollback": "MOBL-162",
+    "disk-full": "MOBL-163",
+    "disk-logs": "MOBL-164",
+    "auth-401": "MOBL-165",
+    "auth-sync": "MOBL-166",
+    "ctrl-icon": "MOBL-167",
+    "ctrl-a11y": "MOBL-168",
+    "ctrl-retro": "MOBL-169"
   },
   "pairs": [
     {
       "id": "redis-peak",
       "family": "redis-pool",
-      "query_issue": "MOBL-144",
+      "query_issue": "MOBL-157",
       "query": "Checkout falls over at peak again",
       "expected": [
         "MOBL-58",
@@ -43,7 +43,7 @@
     {
       "id": "redis-504",
       "family": "redis-pool",
-      "query_issue": "MOBL-145",
+      "query_issue": "MOBL-158",
       "query": "Customers see 504s when traffic is high",
       "expected": [
         "MOBL-62",
@@ -61,7 +61,7 @@
     {
       "id": "redis-queue",
       "family": "redis-pool",
-      "query_issue": "MOBL-146",
+      "query_issue": "MOBL-159",
       "query": "Cart requests queue up at rush hour",
       "expected": [
         "MOBL-60",
@@ -80,7 +80,7 @@
     {
       "id": "deploy-5xx",
       "family": "bad-deploy",
-      "query_issue": "MOBL-147",
+      "query_issue": "MOBL-160",
       "query": "Payment errors started right after today's release",
       "expected": [
         "MOBL-70",
@@ -99,7 +99,7 @@
     {
       "id": "deploy-dupes",
       "family": "bad-deploy",
-      "query_issue": "MOBL-148",
+      "query_issue": "MOBL-161",
       "query": "Customers got charged twice for one order",
       "expected": [
         "MOBL-73",
@@ -117,7 +117,7 @@
     {
       "id": "deploy-rollback",
       "family": "bad-deploy",
-      "query_issue": "MOBL-149",
+      "query_issue": "MOBL-162",
       "query": "We rolled the release back, checkout was broken",
       "expected": [
         "MOBL-74",
@@ -135,7 +135,7 @@
     {
       "id": "disk-full",
       "family": "disk-full",
-      "query_issue": "MOBL-150",
+      "query_issue": "MOBL-163",
       "query": "Database server is out of space",
       "expected": [
         "MOBL-76",
@@ -144,9 +144,9 @@
         "MOBL-78"
       ],
       "got_top3": [
+        "MOBL-78",
         "MOBL-77",
-        "MOBL-80",
-        "MOBL-76"
+        "MOBL-80"
       ],
       "hit": true,
       "comment": true,
@@ -156,7 +156,7 @@
     {
       "id": "disk-logs",
       "family": "disk-full",
-      "query_issue": "MOBL-151",
+      "query_issue": "MOBL-164",
       "query": "A log file grew until the node filled up",
       "expected": [
         "MOBL-79",
@@ -174,7 +174,7 @@
     {
       "id": "auth-401",
       "family": "auth-token",
-      "query_issue": "MOBL-152",
+      "query_issue": "MOBL-165",
       "query": "Integration calls rejected with 401 this morning",
       "expected": [
         "MOBL-82",
@@ -195,7 +195,7 @@
     {
       "id": "auth-sync",
       "family": "auth-token",
-      "query_issue": "MOBL-153",
+      "query_issue": "MOBL-166",
       "query": "Nightly sync has not run since the credential lapsed",
       "expected": [
         "MOBL-86",
@@ -216,7 +216,7 @@
   "controls": [
     {
       "id": "ctrl-icon",
-      "query_issue": "MOBL-154",
+      "query_issue": "MOBL-167",
       "query": "App icon looks blurry on the iPad launcher",
       "comment": false,
       "got_top3": [],
@@ -224,7 +224,7 @@
     },
     {
       "id": "ctrl-a11y",
-      "query_issue": "MOBL-155",
+      "query_issue": "MOBL-168",
       "query": "Accessibility audit flags missing alt text on the settings page",
       "comment": false,
       "got_top3": [],
@@ -232,7 +232,7 @@
     },
     {
       "id": "ctrl-retro",
-      "query_issue": "MOBL-156",
+      "query_issue": "MOBL-169",
       "query": "Weekly retro notes are missing from Confluence",
       "comment": false,
       "got_top3": [],

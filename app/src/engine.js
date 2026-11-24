@@ -314,7 +314,9 @@ export function askDraft({ key, summary, person, receiptKey, receiptDate, fix, r
   const verb = DRAFT_VERB[receiptKind] || DRAFT_VERB.resolved;
   let clause = `${receiptKey}, which you ${verb}`;
   if (receiptDate) clause += ` on ${receiptDate}`;
-  if (fix) clause += `: "${fix}"`;
+  // A fix that already ends in a period would render `.".` inside the quote — trim it.
+  const quoted = fix ? String(fix).replace(/[.\s]+$/, "") : "";
+  if (quoted) clause += `: "${quoted}"`;
   const about = summary ? `${key} ("${summary}")` : key;
   return `Hi ${person} — ${about} looks like ${clause}. Could you take a look?`;
 }
