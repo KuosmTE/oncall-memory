@@ -314,6 +314,17 @@ Evidence (2026-11-06, all against the live site):
   corpus (and that it is free of radar comments), the absence of an eval batch and that both demo
   issues are still open — **6/6 PASS**. That is step 1 of the weekend run book, and it is what
   "panel and radar both show it" means operationally.
+- **Live panel, first look (2026-11-24, Teemu's browser, dev major 6).** Opened from
+  **View app actions → On-Call Memory**; renders above Activity with a `DEV` badge and shows
+  `3 past fixes · 3 people who did them`, Teemu's receipts (`diagnosed` MOBL-70 · `wrote up`
+  MOBL-74 / MOBL-71 / MOBL-70), Cassi's and Max's `resolved` receipts, and
+  `Single owner: Teemu Kuosmanen holds every receipt (3 of 3).` — the badge exists on the screen a
+  judge sees, not only in probe JSON. **Draft the ask** produced
+  `Hi Teemu Kuosmanen — MOBL-122 ("We rolled the release back, checkout was broken") looks like
+  MOBL-70, which you closed …` and **copied it to the clipboard** (the button flipped to "Copied"),
+  so the selectable block is a spare path, not the only one. Note the verb is "closed": the top
+  person's receipt is `wrote up`, and the template follows the kind on purpose.
+  **Still unverified by a human:** clicking a receipt key (the `router.open` fix, DEMO beat 0:40).
 
 The eval batch (**MOBL-130…142**) was deleted after measuring, so the board is again 27 seeded
 incidents + **MOBL-122** (demo question) + **MOBL-127** (honest-empty control). The two demo issues
