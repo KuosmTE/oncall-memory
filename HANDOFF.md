@@ -324,7 +324,9 @@ Evidence (2026-11-06, all against the live site):
   MOBL-70, which you closed …` and **copied it to the clipboard** (the button flipped to "Copied"),
   so the selectable block is a spare path, not the only one. Note the verb is "closed": the top
   person's receipt is `wrote up`, and the template follows the kind on purpose.
-  **Still unverified by a human:** clicking a receipt key (the `router.open` fix, DEMO beat 0:40).
+  **Receipt keys verified the same session:** Teemu clicked every `MOBL-…` link in the panel and
+  each opened the right ticket, so the `router.open` fix works inside the live iframe and DEMO
+  beat 0:40 is filmable. The panel is now the best-evidenced part of the app.
 
 The eval batch (**MOBL-130…142**) was deleted after measuring, so the board is again 27 seeded
 incidents + **MOBL-122** (demo question) + **MOBL-127** (honest-empty control). The two demo issues
