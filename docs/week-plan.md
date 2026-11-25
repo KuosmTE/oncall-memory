@@ -27,9 +27,8 @@ Rules that shape this plan (checked 2026-11-23 against `codegeist2026.devpost.co
 
 ## 1. Unblock the install link — 25 min
 
-a. **Flip the repo public**: GitHub → `KuosmTE/oncall-memory` → Settings → General → Danger zone →
-   Change visibility → Public. (Checked 2026-11-23: `.env` is git-ignored and no secret is committed;
-   the only token-looking strings are documentation placeholders.)
+a. **Repo public** — done 2026-11-25 (`gh repo edit --visibility public`, history scanned, anonymous
+   read 200). Skip to b.
 b. Open
    <https://developer.atlassian.com/console/myapps/d0c1b623-3512-4219-8760-0b15e2bd80b2/manage/distribution>
 c. **Distribution controls → Edit → Sharing** — not "Sharing within organization", the judges are

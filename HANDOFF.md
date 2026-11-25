@@ -380,7 +380,8 @@ the step order; `JUDGES.md` is the testing instruction the rules require.
 - [ ] Installation link generated in the developer console (production 2.0.0 is already deployed) and
       pasted into `JUDGES.md` + the Devpost Access field
 - [ ] Video URL (public YouTube, ≤5 min, front-load 2:50)
-- [ ] Repo public (`KuosmTE/oncall-memory`; checked private 2026-11-06)
+- [x] Repo public — `github.com/KuosmTE/oncall-memory` went public 2026-11-25 (44-commit history
+      scanned for secrets first: nothing but documentation placeholders; anonymous read returns 200)
 - [ ] Test the install link in incognito as a *second* site's admin: install → open issue → panel shows
       output or the empty state → create issue → radar comment arrives
 - [ ] Teamwork Graph: optional 45-min spike in `docs/week-plan.md` §5 decides whether the claim flips
