@@ -9,7 +9,7 @@ Read this first in a fresh session. Then `SPEC.md` (product) and `DEMO.md` (film
 | Repo (local) | `/opt/workspace/codegeist` |
 | App dir | `/opt/workspace/codegeist/app` |
 | App id | `ari:cloud:ecosystem::app/d0c1b623-3512-4219-8760-0b15e2bd80b2` |
-| Developer Space | Minttu Labs (account: teemu.kuosm@gmail.com) — **rename to `bittisorvi.org`** in the console: that string is what the install page shows as the provider |
+| Developer Space | renamed to **`bittisorvi`** 2026-11-25 (the console rejects dots in the space name, so `.org` is dropped there; the distribution form and Devpost still say `bittisorvi.org`) |
 | Live site | `https://one-atlas-boys.atlassian.net` (Forge demo site, ~90 days) |
 | Deployed | `development` **major 6** (2026-11-24: review fixes, Teamwork Graph scopes removed) · **production major 2** (2026-11-24: review fixes + P6a; this is what the judges' install link will serve) — `forge deploy list` prints majors, not minors |
 | Credentials | `/opt/workspace/codegeist/.env` (`FORGE_EMAIL`, `FORGE_API_TOKEN`, chmod 600) |
@@ -377,8 +377,10 @@ the step order; `JUDGES.md` is the testing instruction the rules require.
 
 - [x] Tagline (114 chars), long description, tech-requirement blurb
 - [x] Category: **Apps for Software Teams**; bonus prizes **Agents + MCP** (one bonus per submission)
-- [ ] Installation link generated in the developer console (production 2.0.0 is already deployed) and
-      pasted into `JUDGES.md` + the Devpost Access field
+- [x] Installation link generated 2026-11-25 (production is already deployed) and pasted, verbatim,
+      into `JUDGES.md` and `docs/devpost.md` — the same URL goes into the Devpost **Access** field.
+      Anonymous GET returns 200. **Re-saving sharing in the console invalidates it**: regenerate and
+      update both files, or leave the distribution settings alone after submitting.
 - [ ] Video URL (public YouTube, ≤5 min, front-load 2:50)
 - [x] Repo public — `github.com/KuosmTE/oncall-memory` went public 2026-11-25 (44-commit history
       scanned for secrets first: nothing but documentation placeholders; anonymous read returns 200)
