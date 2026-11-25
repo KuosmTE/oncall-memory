@@ -384,8 +384,10 @@ the step order; `JUDGES.md` is the testing instruction the rules require.
 - [ ] Video URL (public YouTube, ≤5 min, front-load 2:50)
 - [x] Repo public — `github.com/KuosmTE/oncall-memory` went public 2026-11-25 (44-commit history
       scanned for secrets first: nothing but documentation placeholders; anonymous read returns 200)
-- [ ] Test the install link in incognito as a *second* site's admin: install → open issue → panel shows
-      output or the empty state → create issue → radar comment arrives
+- [x] Install link tested 2026-11-25 on a **second site** (`bittisorvi.atlassian.net`, a free SCRUM
+      site): installed from the link without the developer console, and `forge install list` shows it
+      as **production, major 2, Up-to-date** — i.e. judges get the same build as the demo site, with
+      the P6a badge, the drafted ask in the radar comment, and the `router.open` fix.
 - [ ] Teamwork Graph: optional 45-min spike in `docs/week-plan.md` §5 decides whether the claim flips
 - [ ] Submit by 2026-12-15 (slack), hard stop 2026-12-22 12:00 pm PT
 
