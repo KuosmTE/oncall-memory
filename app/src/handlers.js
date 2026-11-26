@@ -244,6 +244,27 @@ export async function memoryCard(payload) {
   return { items: card.items, confidence: card.confidence, note: card.note };
 }
 
+/**
+ * ADF inline content: plain text, but every issue key becomes a link to /browse/KEY. A comment
+ * whose keys are not clickable asks the reader to copy-paste; the panel already links them, so
+ * the radar comment must too (JUDGES.md promises "a key you can click").
+ */
+function adfInline(text) {
+  const parts = [];
+  let last = 0;
+  for (const m of String(text).matchAll(/\b[A-Z][A-Z0-9_]*-[0-9]+\b/g)) {
+    if (m.index > last) parts.push({ type: "text", text: String(text).slice(last, m.index) });
+    parts.push({
+      type: "text",
+      text: m[0],
+      marks: [{ type: "link", attrs: { href: `/browse/${m[0]}` } }],
+    });
+    last = m.index + m[0].length;
+  }
+  if (last < String(text).length) parts.push({ type: "text", text: String(text).slice(last) });
+  return parts.length ? parts : [{ type: "text", text: "" }];
+}
+
 /** ADF for the radar comment: the fixes, who owns / closed them, who to ask, the risk line,
  * and the message already drafted — so the comment is the next action, not a notification. */
 export function commentBody(card) {
@@ -251,10 +272,9 @@ export function commentBody(card) {
     type: "listItem",
     content: [{
       type: "paragraph",
-      content: [{
-        type: "text",
-        text: `${i.key} — ${i.summary}${i.why ? ` — ${i.why}` : ""}${i.resolvedBy ? ` — assignee ${i.resolvedBy}` : ""}${i.wroteBy && i.wroteBy !== i.resolvedBy ? ` — closed by ${i.wroteBy}` : ""}${i.lastFix ? `: ${i.lastFix}` : ""}`,
-      }],
+      content: adfInline(
+        `${i.key} — ${i.summary}${i.why ? ` — ${i.why}` : ""}${i.resolvedBy ? ` — assignee ${i.resolvedBy}` : ""}${i.wroteBy && i.wroteBy !== i.resolvedBy ? ` — closed by ${i.wroteBy}` : ""}${i.lastFix ? `: ${i.lastFix}` : ""}`
+      ),
     }],
   }));
 
@@ -269,11 +289,11 @@ export function commentBody(card) {
     type: "doc",
     version: 1,
     content: [
-      { type: "paragraph", content: [{ type: "text", text: "On-Call Memory — this looks like it has happened before:" }] },
+      { type: "paragraph", content: adfInline("On-Call Memory — this looks like it has happened before:") },
       { type: "bulletList", content: bullets },
-      ...(people.length ? [{ type: "paragraph", content: [{ type: "text", text: people[0] }] }] : []),
-      ...(owner ? [{ type: "paragraph", content: [{ type: "text", text: owner }] }] : []),
-      ...(ask ? [{ type: "paragraph", content: [{ type: "text", text: ask }] }] : []),
+      ...(people.length ? [{ type: "paragraph", content: adfInline(people[0]) }] : []),
+      ...(owner ? [{ type: "paragraph", content: adfInline(owner) }] : []),
+      ...(ask ? [{ type: "paragraph", content: adfInline(ask) }] : []),
     ],
   };
 }

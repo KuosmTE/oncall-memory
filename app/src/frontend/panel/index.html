@@ -5,13 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>On-Call Memory</title>
     <style>
-      /* Atlassian-ish tokens; the panel sits inside Jira, so it must not fight the chrome. */
+      /* Atlassian-ish tokens; the panel sits inside Jira, so it must not fight the chrome.
+         Surface colours come from the app's theme vars (defined by the host, including Jira's
+         dark theme) with the light values as fallback — a hard #fff panel is a white slab in
+         dark mode. */
       :root {
-        --n900: #172b4d;
-        --n200: #dfe1e6;
-        --n100: #f4f5f7;
-        --muted: #6b778c;
-        --accent: #0052cc;
+        --n900: var(--ds-text, #172b4d);
+        --n200: var(--ds-border, #dfe1e6);
+        --n100: var(--ds-surface-sunken, #f4f5f7);
+        --muted: var(--ds-text-subtle, #6b778c);
+        --accent: var(--ds-link, #0052cc);
+        --panel-bg: var(--ds-surface, #fff);
+      }
+      @media (prefers-color-scheme: dark) {
+        :root { --panel-bg: var(--ds-surface, #1d2125); }
       }
       * { box-sizing: border-box; }
       body {
@@ -21,7 +28,7 @@
         font-size: 13px;
         line-height: 1.45;
         color: var(--n900);
-        background: #fff;
+        background: var(--panel-bg);
       }
       h2 {
         margin: 0 0 6px;
@@ -44,7 +51,7 @@
       .err { border-left-color: #de350b; }
       /* P6a: the risk line, the ask button, and its selectable fallback. */
       .owner { margin: 6px 0 0; font-size: 12px; }
-      .btn { margin: 4px 0 0; padding: 4px 10px; font: inherit; font-size: 12px; color: var(--accent); background: #fff; border: 1px solid var(--accent); border-radius: 3px; cursor: pointer; }
+      .btn { margin: 4px 0 0; padding: 4px 10px; font: inherit; font-size: 12px; color: var(--accent); background: var(--panel-bg); border: 1px solid var(--accent); border-radius: 3px; cursor: pointer; }
       .btn:hover { background: var(--n100); }
       .drafttext { margin: 6px 0 0; padding: 8px; background: var(--n100); border: 1px solid var(--n200); border-radius: 3px; white-space: pre-wrap; font: inherit; font-size: 12px; user-select: text; }
     </style>

@@ -343,6 +343,19 @@ changes: 10/10 top-3 · 0/3 controls** (`tools/eval-20261124.json`, re-run on th
 measured build is the live build). Deployed to `development` and `production`; no new scopes. The
 trailing-period trim (`askDraft` drops a final `.` before quoting the fix) landed before that eval.
 
+**Dark mode + clickable keys (2026-11-26).** Two things Teemu's second-site test exposed:
+
+- The panel body was a hard `#fff` slab inside Jira's dark theme. Surfaces now read `--ds-surface`,
+  `--ds-text`, `--ds-border`, `--ds-link` with the light values as fallback, plus a
+  `prefers-color-scheme: dark` default, so the card sits on the host surface instead of glowing.
+- The radar comment printed issue keys as plain text. `adfInline()` now wraps every
+  `KEY-123` match in an ADF `link` mark to `/browse/KEY`, so the comment and the panel both let a
+  reader click through — the promise JUDGES.md already made. Verified on a live comment
+  (`MOBL-170`): 9 linked keys, all `/browse/...`, nothing else marked.
+
+Tests 45 → 46 (comment links). Eval re-run on that build: **10/10 top-3 · 0/3 controls**
+(`tools/eval-20261126.json`), fixtures swept. Deployed to development and production.
+
 The eval batch (**MOBL-157…169**, second run) was deleted after measuring, so the board is again 27
 seeded incidents + **MOBL-122** (demo question) + **MOBL-127** (honest-empty control). The two demo
 issues

@@ -53,6 +53,23 @@ test("the radar comment ends with the drafted ask", async () => {
   assert.ok(!paragraphs.some((p) => p.startsWith("Single owner")), "one matched issue: no badge");
 });
 
+test("the radar comment links every issue key it prints", async () => {
+  const { buildCard, commentBody } = await import("../src/handlers.js");
+  const card = await buildCard({ issueKey: "Q-1" });
+  const linked = [];
+  const walk = (node) => {
+    if (Array.isArray(node)) return node.forEach(walk);
+    if (!node || typeof node !== "object") return;
+    if (node.type === "text" && (node.marks || []).some((m) => m.type === "link")) linked.push(node.text);
+    (node.content || []).forEach(walk);
+  };
+  walk(commentBody(card));
+  assert.ok(linked.includes("Q-2"), `Q-2 must be a link, got ${JSON.stringify(linked)}`);
+  for (const key of linked) {
+    assert.match(key, /^[A-Z][A-Z0-9_]*-[0-9]+$/, "only issue keys are marked as links");
+  }
+});
+
 test("buildCard says 'nothing to search on' instead of querying an empty ticket", async () => {
   const { buildCard } = await import("../src/handlers.js");
   const card = await buildCard({});
